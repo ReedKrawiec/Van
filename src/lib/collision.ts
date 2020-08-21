@@ -35,18 +35,16 @@ function velocity_max(velocity:number,box:collision_box,objs:Array<obj<unknown>>
     let orig_st = origin.state as obj_state;
     let collider_st = collider.state as obj_state;
     if(dir == direction.left){
-      console.log(collider);
-      console.log(origin);
       return orig_st.position.x - (collider_st.position.x + collider.width);
     }
     else if(dir == direction.right){
-      return collider_st.position.x - (orig_st.position.x + origin.width) - 1;
+      return collider_st.position.x - (orig_st.position.x + origin.width);
     }
     else if(dir == direction.down){
       return orig_st.position.y - (collider_st.position.y + collider.height);
     }
     else if(dir == direction.up){
-      return collider_st.position.y - (orig_st.position.y + origin.height) - 1;
+      return collider_st.position.y - (orig_st.position.y + origin.height);
     }
   }
 }

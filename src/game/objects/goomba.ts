@@ -44,7 +44,6 @@ export class Goomba extends gravity_obj<goomba_state>{
     }
   }
   statef(time:number){
-    //console.log(this.state);
     /*
     if(this.state.direction == direction.right){
       this.state.velocity.x = 3;
@@ -68,8 +67,11 @@ export class StandingGoomba extends gravity_obj<goomba_state>{
   height = 64;
   width = 64;
   collision = true;
-  constructor(x:number,y:number){
+  constructor(x:number,y:number,id:string = undefined){
     super();
+    if(id){
+      this.id = id;
+    }    
     this.state = {
       direction:direction.left,
       position:{
@@ -81,5 +83,8 @@ export class StandingGoomba extends gravity_obj<goomba_state>{
         y:0
       }
     }
+  }
+  statef(time:number){
+    console.log(this.state.position.y);
   }
 }

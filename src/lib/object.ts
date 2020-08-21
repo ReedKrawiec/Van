@@ -47,22 +47,20 @@ export class obj<T>{
   statef(time:number){
   }
   collides_with_box(a:collision_box):boolean{
-    
     let st = this.state as unknown as obj_state;
     let hcollides = false, vcollides = false;
-    if(st.position.x >= a.x && st.position.x <= (a.x + a.width)){
+    if(st.position.x >= a.x && st.position.x < (a.x + a.width)){
       hcollides = true;
     }
     if(a.x > st.position.x && a.x < (st.position.x + this.width)){
       hcollides = true;
     }
-    if(st.position.y >= a.y && st.position.y <= (a.y + a.height)){
+    if(st.position.y >= a.y && st.position.y < (a.y + a.height)){
       vcollides = true;
     }
     if(a.y > st.position.y && a.y < (st.position.y + this.height)){
       vcollides = true;
     }
-    console.log(hcollides + " " + vcollides);
     return hcollides && vcollides;
   }
   collides_with(a:obj<unknown>):boolean{
@@ -81,7 +79,6 @@ export class obj<T>{
     if(st_2.position.y > st.position.y && st_2.position.y < (st.position.y + a.width)){
       vcollides = true;
     }
-    //console.log(vcollides);
     return hcollides && vcollides;
   }
   renderf(time:number):sprite{

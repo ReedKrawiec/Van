@@ -53,10 +53,6 @@ const renderLoop = (t:number)=>{
   requestAnimationFrame(renderLoop) 
 }
 
-window.addEventListener("keydown",(e)=>{
-  console.log(e);
-})
-
 async function main(){
   await curr_room.load();
   curr_room.register_controls();

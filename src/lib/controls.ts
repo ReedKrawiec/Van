@@ -1,5 +1,4 @@
 window.addEventListener("keydown",(e)=>{
-  console.log(binds);
   if(e.code in binds){
     for(let a = 0;a < binds[e.code].length;a++){
       binds[e.code][a]();

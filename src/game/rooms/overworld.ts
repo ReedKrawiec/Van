@@ -11,7 +11,7 @@ interface overworld_i{
 
 export class Overworld extends room<overworld_i>{
   background_url="https://img.wallpapersafari.com/desktop/1920/1080/8/51/imD41l.jpg";
-  objects = [new Goomba(936,800,"player"),new StandingGoomba(936,1200),new StandingGoomba(0,800),new StandingGoomba(0,1000),new StandingGoomba(0,600), new Box(0,400), new Box(500,500)]
+  objects = [new Goomba(800,800,"player"),new StandingGoomba(801,400),new StandingGoomba(801,464),new StandingGoomba(801,528),new StandingGoomba(801,592),new StandingGoomba(801,656), new Box(500,0,"box")]
   constructor(){
     super();
     this.state = {
@@ -30,9 +30,7 @@ export class Overworld extends room<overworld_i>{
     this.state.player = this.getObj("player") as gravity_obj<unknown>;
     
     Bind("KeyW",()=>{
-      console.log("w");
       let st = _this.state.player.state as goomba_state;
-      console.log(st.velocity.y);
       if(st.velocity.y < 15){
         st.velocity.y += 15
       }
