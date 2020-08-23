@@ -15,7 +15,17 @@ enum direction{
   down
 }
 
-function check_collisions(c: collision_box, objs: Array<obj<unknown>>, exemption:string) {
+export function check_all_collisions(c: collision_box,objs:Array<obj<unknown>>,exemption:string){
+  let matched = [];
+  for (let a of objs) {
+    if (a.id !== exemption && a.collision && a.collides_with_box(c)) {
+      matched.push(a.id);
+    }
+  }
+  return matched
+}
+//Checks up to the first collision
+export function check_collisions(c: collision_box, objs: Array<obj<unknown>>, exemption:string) {
   for (let a of objs) {
     if (a.id !== exemption && a.collision && a.collides_with_box(c)) {
       return a.id;
@@ -77,7 +87,6 @@ export function velocity_collision_check(object:obj<unknown>,list:Array<obj<unkn
       height: ob.height
     }
     let vel = velocity_max(st.velocity.x,box,list,ob.id,direction.left);
-    console.log(vel);
     if(vel < 0){
       st.position.x += vel;
     }

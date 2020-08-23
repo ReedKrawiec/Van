@@ -1,7 +1,9 @@
 import { gravity_obj,obj } from "./object";
 import { sprite } from "./sprite";
 import { obj_state } from "./state";
-import { velocity_collision_check } from "./collision";
+import { velocity_collision_check,check_collisions,collision_box,check_all_collisions } from "./collision";
+import {render_collision_box,DEBUG} from "../van";
+import {Bind,control_func} from "./controls";
 
 export function apply_gravity(ob:gravity_obj<unknown>,grav_const:number, grav_max:number){
   let st = ob.state as obj_state;
@@ -30,6 +32,23 @@ export class room<T>{
         resolve();
       });
     })
+  }
+  deleteItem(id:string){
+    for(let a = 0;a < this.objects.length;a++){
+      if(this.objects[a].id === id){
+        this.objects = this.objects.slice(0,a).concat(this.objects.slice(a+1));
+        a--;
+      }
+    }
+    
+  }
+  bindControl(key:string,func:control_func){
+    Bind(key,func); 
+  }
+  check_collisions(box:collision_box,exempt?:string):string[]{
+    if(DEBUG)
+      render_collision_box(box);
+    return check_all_collisions(box,this.objects,exempt);
   }
   register_controls(){
 

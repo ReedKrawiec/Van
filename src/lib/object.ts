@@ -2,6 +2,9 @@ import {state_func,obj_state} from "./state";
 import {render_func} from "./render";
 import {sprite} from "./sprite";
 import {collision_box} from "./collision";
+import {GetCurrentRoom} from "../van";
+import {Bind,control_func} from "./controls";
+
 interface obj_i<T>{
   statef:state_func<T>,
   renderf:render_func
@@ -32,6 +35,7 @@ export class obj<T>{
   constructor(){
     this.id = ""+counter;
     counter++;
+    this.register_controls();
   }
   load(){
     let _this = this;
@@ -43,6 +47,27 @@ export class obj<T>{
         resolve();
       });
     })
+  }
+  bindControl(key:string,func:control_func){
+    if(key == "Mouse1"){
+      Bind(key,func,this);
+    }
+    else{
+      Bind(key,func); 
+    }
+  }
+  register_controls(){
+
+  }
+  delete(){
+    GetCurrentRoom().deleteItem(this.id);
+  }
+  collision_check(a:collision_box):string[]{
+    if(this.collision){
+      let room = GetCurrentRoom();
+      return room.check_collisions(a,this.id);
+    }
+    return [];
   }
   statef(time:number){
   }

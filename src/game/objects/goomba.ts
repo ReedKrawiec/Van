@@ -1,6 +1,12 @@
 import {velocity,obj_state,state_func} from "../../lib/state";
 import {sprite,sprite_gen} from "../../lib/sprite";
-import {gravity_obj} from "../../lib/object";
+import {gravity_obj,obj} from "../../lib/object";
+import {Poll_Mouse} from "../../lib/controls";
+import {collision_box} from "../../lib/collision";
+import {Bind} from "../../lib/controls";
+
+import {Overworld} from "../rooms/overworld";
+import {loadRoom,GetCurrentRoom} from "../../van";
 
 enum direction{
   left,
@@ -9,7 +15,8 @@ enum direction{
 
 export interface goomba_state extends obj_state{
   direction: direction,
-  velocity:velocity
+  velocity:velocity,
+  selected:boolean
 }
 
 export class Goomba extends gravity_obj<goomba_state>{
@@ -31,7 +38,8 @@ export class Goomba extends gravity_obj<goomba_state>{
       velocity:{
         x:0,
         y:0
-      }
+      },
+      selected:false
     }
   }
   renderf(t:number):sprite{
@@ -43,22 +51,103 @@ export class Goomba extends gravity_obj<goomba_state>{
       return sprites[1];
     }
   }
+  
+  register_controls(){
+    this.bindControl("Mouse1",()=>{
+      this.state.velocity.x = 0;
+      this.state.velocity.y = 0;
+      this.state.selected = !this.state.selected;
+      this.gravity = !this.gravity;
+    });
+  }
+  
   statef(time:number){
-    /*
-    if(this.state.direction == direction.right){
-      this.state.velocity.x = 3;
-      if(this.state.position.x >= 1000 - this.width){
-        this.state.direction = direction.left;
+    if(this.state.selected){
+      let mouse_position = Poll_Mouse();
+      if(mouse_position.y > mouse_position.last.y){
+        if(this.collision_check({
+          x:this.state.position.x,
+          y:this.state.position.y + this.height,
+          width:this.width,
+          height:1
+        }).length == 0){
+          this.state.position.y = mouse_position.y - this.height/2;
+        }
+      }
+      else if(mouse_position.y < mouse_position.last.y){
+        if(this.collision_check({
+          x:this.state.position.x,
+          y:this.state.position.y - 1,
+          width:this.width,
+          height:1
+        }).length == 0){
+          this.state.position.y = mouse_position.y - this.height/2;
+        }
+      }
+      if(mouse_position.x < mouse_position.last.x){
+        if(this.collision_check({
+          x:this.state.position.x - 1,
+          y:this.state.position.y,
+          width:1,
+          height:this.height
+        }).length == 0){
+          this.state.position.x = mouse_position.x - this.width/2;
+        }
+      }
+      else if(mouse_position.x > mouse_position.last.x){
+        if(this.collision_check({
+          x:this.state.position.x + this.width,
+          y:this.state.position.y,
+          width:1,
+          height:this.height
+        }).length == 0){
+          this.state.position.x = mouse_position.x - this.width/2;
+        }
       }
     }
-    if(this.state.direction == direction.left){
-      this.state.velocity.x = -3;
-      if(this.state.position.x <= 0){
-        this.state.direction = direction.right;
+    else if(GetCurrentRoom().check_collisions({
+      x:this.state.position.x,
+      y:this.state.position.y - 1,
+      width:this.width,
+      height:1
+    }).length > 0){
+      let left_fall_box:collision_box = {
+        x:this.state.position.x - this.width - 3,
+        y:this.state.position.y - this.height,
+        height:this.height,
+        width:this.width
+      }
+      let left_wall_box:collision_box = {
+        x:this.state.position.x - 3,
+        y:this.state.position.y,
+        height:this.height,
+        width:3
+      }
+      let right_fall_box:collision_box = {
+        x:this.state.position.x + this.width + 3,
+        y:this.state.position.y - this.height,
+        height:this.height,
+        width:this.width
+      }
+      let right_wall_box:collision_box = {
+        x:this.state.position.x + this.width,
+        y:this.state.position.y,
+        height:this.height,
+        width:3
+      }
+      if(this.state.direction == direction.right){
+        this.state.velocity.x = 3;
+        if(GetCurrentRoom().check_collisions(right_fall_box).length == 0 || GetCurrentRoom().check_collisions(right_wall_box).length > 0){
+          this.state.direction = direction.left;
+        }
+      }
+      else if(this.state.direction == direction.left){
+        this.state.velocity.x = -3;
+        if(GetCurrentRoom().check_collisions(left_fall_box).length == 0 || GetCurrentRoom().check_collisions(left_wall_box).length > 0){
+          this.state.direction = direction.right;
+        }
       }
     }
-    */
-    
   }
 }
 
@@ -81,10 +170,60 @@ export class StandingGoomba extends gravity_obj<goomba_state>{
       velocity:{
         x:0,
         y:0
+      },
+      selected:false
+    }
+  }
+  register_controls(){
+    this.bindControl("Mouse1",()=>{
+      this.state.selected = !this.state.selected;
+      this.gravity = !this.gravity;
+    })
+  }
+  statef(time:number){
+    if(this.state.selected){
+      let mouse_position = Poll_Mouse();
+      if(mouse_position.y > mouse_position.last.y){
+        if(this.collision_check({
+          x:this.state.position.x,
+          y:this.state.position.y + this.height,
+          width:this.width,
+          height:1
+        }).length == 0){
+          this.state.position.y = mouse_position.y - this.height/2;
+        }
+      }
+      else if(mouse_position.y < mouse_position.last.y){
+        if(this.collision_check({
+          x:this.state.position.x,
+          y:this.state.position.y - 1,
+          width:this.width,
+          height:1
+        }).length == 0){
+          this.state.position.y = mouse_position.y - this.height/2;
+        }
+      }
+      if(mouse_position.x < mouse_position.last.x){
+        if(this.collision_check({
+          x:this.state.position.x - 1,
+          y:this.state.position.y,
+          width:1,
+          height:this.height
+        }).length == 0){
+          this.state.position.x = mouse_position.x - this.width/2;
+        }
+      }
+      else if(mouse_position.x > mouse_position.last.x){
+        if(this.collision_check({
+          x:this.state.position.x + this.width,
+          y:this.state.position.y,
+          width:1,
+          height:this.height
+        }).length == 0){
+          this.state.position.x = mouse_position.x - this.width/2;
+        }
       }
     }
   }
-  statef(time:number){
-    console.log(this.state.position.y);
-  }
 }
+

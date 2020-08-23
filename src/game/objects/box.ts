@@ -23,4 +23,9 @@ export class Box extends gravity_obj<obj_state>{
       }
     }
   }
+  register_controls(){
+    this.bindControl("Mouse1",()=>{
+      this.delete();
+    })
+  }
 }
