@@ -21,6 +21,3 @@ export interface room_state{
   objects: Array<obj_state>
 }
 
-export interface player_state{
-  position:position;
-}

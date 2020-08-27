@@ -2,8 +2,8 @@ import {state_func,obj_state} from "./state";
 import {render_func} from "./render";
 import {sprite} from "./sprite";
 import {collision_box} from "./collision";
-import {GetCurrentRoom} from "../van";
-import {Bind,control_func} from "./controls";
+import {getGame} from "../van";
+import {Unbind,Bind,control_func} from "./controls";
 
 interface obj_i<T>{
   statef:state_func<T>,
@@ -29,11 +29,14 @@ export class obj<T>{
   width:number = undefined;
   collision:boolean = false;
   id:string;
+  binds:Array<number>;
+  render = true;
   getState(){
     return this.state;
   }
   constructor(){
     this.id = ""+counter;
+    this.binds = [];  
     counter++;
     this.register_controls();
   }
@@ -50,21 +53,25 @@ export class obj<T>{
   }
   bindControl(key:string,func:control_func){
     if(key == "Mouse1"){
-      Bind(key,func,this);
+      let b = Bind(key,func,this);
+      this.binds.push(b);
     }
     else{
-      Bind(key,func); 
+      this.binds.push(Bind(key,func)); 
     }
   }
   register_controls(){
 
   }
   delete(){
-    GetCurrentRoom().deleteItem(this.id);
+    for(let a of this.binds){
+      Unbind(a);
+    }
+    getGame().getRoom().deleteItem(this.id);
   }
-  collision_check(a:collision_box):string[]{
+  collision_check(a:collision_box):Array<obj<unknown>>{
     if(this.collision){
-      let room = GetCurrentRoom();
+      let room = getGame().getRoom();
       return room.check_collisions(a,this.id);
     }
     return [];

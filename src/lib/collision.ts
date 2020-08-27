@@ -15,11 +15,21 @@ enum direction{
   down
 }
 
-export function check_all_collisions(c: collision_box,objs:Array<obj<unknown>>,exemption:string){
+export function check_all_objects(c: collision_box,objs:Array<obj<unknown>>,exemption:string):Array<obj<unknown>>{
+  let matched = [];
+  for (let a of objs) {
+    if (a.id !== exemption && a.collides_with_box(c)) {
+      matched.push(a);
+    }
+  }
+  return matched
+}
+
+export function check_all_collisions(c: collision_box,objs:Array<obj<unknown>>,exemption:string):Array<obj<unknown>>{
   let matched = [];
   for (let a of objs) {
     if (a.id !== exemption && a.collision && a.collides_with_box(c)) {
-      matched.push(a.id);
+      matched.push(a);
     }
   }
   return matched
@@ -28,19 +38,19 @@ export function check_all_collisions(c: collision_box,objs:Array<obj<unknown>>,e
 export function check_collisions(c: collision_box, objs: Array<obj<unknown>>, exemption:string) {
   for (let a of objs) {
     if (a.id !== exemption && a.collision && a.collides_with_box(c)) {
-      return a.id;
+      return a;
     }
   }
   return undefined;
 }
 
 function velocity_max(velocity:number,box:collision_box,objs:Array<obj<unknown>>, exemption:string,dir:direction){
-  let collision_id = check_collisions(box, objs, exemption);
-  if(collision_id == undefined){
+  let collision = check_collisions(box, objs, exemption);
+  if(collision == undefined){
     return velocity;
   }
   else{
-    let collider = getId(objs,collision_id);
+    let collider = collision;
     let origin = getId(objs,exemption);
     let orig_st = origin.state as obj_state;
     let collider_st = collider.state as obj_state;

@@ -1,4 +1,4 @@
-import {GetScreenDimensions} from "../van";
+import {GetScreenDimensions,GetViewportDimensions,getGame} from "../van";
 import { collision_box } from "./collision";
 import {obj} from "./object";
 
@@ -11,6 +11,8 @@ interface mousePos{
   }
 }
 
+
+
 export interface control_func{
   ():void
 }
@@ -22,45 +24,66 @@ interface mouseBinds{
 interface keyBinds{
   [key:string]: Array<control_func>
 }
-
-window.addEventListener("click",(e)=>{
-  let dimen = GetScreenDimensions();
+let target = document.getElementById("target");
+target.addEventListener("click",(e)=>{
+  let mouse = Poll_Mouse();
   let box:collision_box = {
-    x:e.clientX,
-    y:dimen.height - e.clientY,
+    x:mouse.x,
+    y:mouse.y,
     height:1,
     width:1
   };
-  if("Mouse1" in mouseBinds){
-    for(let a = 0;a < mouseBinds["Mouse1"].length;a++){
-      console.log(mouseBinds["Mouse1"][a]);
-      if(mouseBinds["Mouse1"][a][1] !== undefined){
-        if(mouseBinds["Mouse1"][a][1].collides_with_box(box)){
-         mouseBinds["Mouse1"][a][0]();
+  let d = [...all_binds];
+  for(let a = 0;a < d.length;a++){
+    let selected = d[a];
+    if(selected.type === btype.mouse && selected.key === "Mouse1"){
+      if(selected.obj !== undefined){
+        if(selected.obj.collides_with_box(box)){
+          selected.function();
         }
       }
       else{
-        mouseBinds["Mouse1"][a][0]();
+        selected.function();        
       }
     }
-  }
-  
+  }  
 })
 
-window.addEventListener("keydown",(e)=>{
-  if(e.code in binds){
-    for(let a = 0;a < binds[e.code].length;a++){
-      binds[e.code][a]();
+
+
+window.addEventListener("keydown", (e) => {
+  let d = [...all_binds];
+  for (let a = 0; a < all_binds.length; a++) {
+    let selected = d[a];
+    if (selected.type === btype.keyboard && selected.key === e.code) {
+      selected.function();
     }
   }
 })
-
-window.addEventListener("mousemove",(e)=>{
+let tracker = document.getElementById("target");
+tracker.addEventListener("mousemove", (e) => {
+  var rect = (e.target as HTMLCanvasElement).getBoundingClientRect() ;
+  
   last_x = x;
   last_y = y;
-  x = e.clientX;
-  y = e.clientY;
+  x = e.clientX - rect.left; //x position within the element.
+  y = e.clientY - rect.top;  //y position within the element.
+  console.log(e);
+
 })
+
+enum btype{
+  mouse,
+  keyboard
+}
+
+interface bind{
+  key:string,
+  type:btype,
+  id:number,
+  function:control_func,
+  obj?:obj<unknown>
+}
 
 let x = 0;
 let y = 0;
@@ -68,30 +91,56 @@ let last_x = 0;
 let last_y = 0;
 let binds:keyBinds = {};
 let mouseBinds:mouseBinds = {};
+let bind_count = 0;
+
+let all_binds:Array<bind> = []
+
 
 export function Poll_Mouse():mousePos{
-  let height = GetScreenDimensions().height;
+  let height = GetViewportDimensions().height;
+  let canvas = getGame().state.canvas;
+  let wratio = parseFloat(window.getComputedStyle(canvas).width)/GetViewportDimensions().width;
+  let vratio = parseFloat(window.getComputedStyle(canvas).height)/GetViewportDimensions().height;
+  let camera = getGame().state.camera;
   return ({
-    x,
-    y: height - y,
+    x: (x/wratio/camera.state.scaling + camera.state.position.x) ,
+    y: ((height - y/vratio)/camera.state.scaling + camera.state.position.y),
     last:{
-      x:last_x,
-      y: height - last_y
+      x: (x/wratio/camera.state.scaling + camera.state.position.x),
+      y: ((height - y/vratio)/camera.state.scaling + camera.state.position.y)
     }
   })
 }
 
-export function Bind(keyname:string,func:control_func,object?:obj<unknown>){
-  if(keyname.slice(0,5) !== "Mouse"){
-    if(binds[keyname] == undefined){
-      binds[keyname] = [];
+export function Unbind(bind_id:number){
+  for(let a = 0;a < all_binds.length; a++){
+    if(all_binds[a].id == bind_id){
+      all_binds.splice(a,1);
+      break;
     }
-    binds[keyname].push(func);
+  }
+
+}
+
+let id = 0;
+export function Bind(keyname:string,func:control_func,object?:obj<unknown>):number{
+  if(keyname.slice(0,5) === "Mouse"){
+    all_binds.push({
+      key:keyname,
+      type:btype.mouse,
+      id:id,
+      function:func,
+      obj:object
+    })
   }
   else{
-    if(mouseBinds[keyname] == undefined){
-      mouseBinds[keyname] = [];
-    }
-    mouseBinds[keyname].push([func,object])
+    all_binds.push({
+      key:keyname,
+      type:btype.keyboard,
+      id:id,
+      function:func
+    })
   }
+  id++;
+  return id - 1;
 }

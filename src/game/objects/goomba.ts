@@ -6,7 +6,7 @@ import {collision_box} from "../../lib/collision";
 import {Bind} from "../../lib/controls";
 
 import {Overworld} from "../rooms/overworld";
-import {loadRoom,GetCurrentRoom} from "../../van";
+import {getGame} from "../../van";
 
 enum direction{
   left,
@@ -53,15 +53,27 @@ export class Goomba extends gravity_obj<goomba_state>{
   }
   
   register_controls(){
+    /*
     this.bindControl("Mouse1",()=>{
       this.state.velocity.x = 0;
       this.state.velocity.y = 0;
       this.state.selected = !this.state.selected;
       this.gravity = !this.gravity;
     });
+    */
+    this.bindControl("KeyA",()=>{
+      this.state.velocity.x = -3;
+    });
+    this.bindControl("KeyD",()=>{
+      this.state.velocity.x = 3;
+    });
+    this.bindControl("KeyW",()=>{
+      this.state.velocity.y += 15;
+    });
   }
   
   statef(time:number){
+    /*
     if(this.state.selected){
       let mouse_position = Poll_Mouse();
       if(mouse_position.y > mouse_position.last.y){
@@ -105,7 +117,7 @@ export class Goomba extends gravity_obj<goomba_state>{
         }
       }
     }
-    else if(GetCurrentRoom().check_collisions({
+    else if(getGame().getRoom().check_collisions({
       x:this.state.position.x,
       y:this.state.position.y - 1,
       width:this.width,
@@ -137,17 +149,19 @@ export class Goomba extends gravity_obj<goomba_state>{
       }
       if(this.state.direction == direction.right){
         this.state.velocity.x = 3;
-        if(GetCurrentRoom().check_collisions(right_fall_box).length == 0 || GetCurrentRoom().check_collisions(right_wall_box).length > 0){
+        if(getGame().getRoom().check_collisions(right_fall_box).length == 0 || getGame().getRoom().check_collisions(right_wall_box).length > 0){
           this.state.direction = direction.left;
         }
       }
       else if(this.state.direction == direction.left){
         this.state.velocity.x = -3;
-        if(GetCurrentRoom().check_collisions(left_fall_box).length == 0 || GetCurrentRoom().check_collisions(left_wall_box).length > 0){
+        if(getGame().getRoom().check_collisions(left_fall_box).length == 0 || getGame().getRoom().check_collisions(left_wall_box).length > 0){
           this.state.direction = direction.right;
         }
       }
     }
+    */
+
   }
 }
 
