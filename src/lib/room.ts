@@ -12,9 +12,13 @@ export function apply_gravity(ob:gravity_obj<unknown>,grav_const:number, grav_ma
     st.velocity.y += grav_const;
   }
 }
-
+export interface room_i<T>{
+  background_url:string,
+  objects:Array<obj<unknown>>
+  state:T
+}
 export class room<T>{
-  background_url: string = "";
+  background_url: string;
   background: HTMLImageElement;
   objects: Array<obj<unknown>>
   state: T

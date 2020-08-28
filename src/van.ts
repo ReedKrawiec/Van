@@ -4,28 +4,21 @@ import {obj} from "./lib/object";
 import {obj_state} from "./lib/state";
 import {room} from "./lib/room";
 import {sprite} from "./lib/sprite";
-import {Overworld} from "./game/rooms/overworld";
-import {Tester} from "./game/rooms/test_room";
 import { collision_box } from "./lib/collision";
 import {sprite_renderer,rect_renderer, Camera} from "./lib/render";
+
+import {Overworld} from "./game/rooms/overworld";
+import {Board} from "./game/rooms/board";
 
 let canvas_element:HTMLCanvasElement = document.getElementById("target") as HTMLCanvasElement;
 let context:CanvasRenderingContext2D = canvas_element.getContext("2d");
 
 
-
 let screen_width = window.innerWidth;
 let screen_height = window.innerHeight;
 
-/*
-let vheight = 1200;
-let vwidth = vheight * (16/9);
-canvas.width = vwidth;
-canvas.height = vheight;
-*/
-
-let vwidth = 800;
-let vheight = 400;
+let vwidth = canvas_element.width;
+let vheight = canvas_element.height;
 
 
 //How often the game logic loop should run, in milliseconds
@@ -159,7 +152,7 @@ export class game{
   }
 }
 
-let game_inst = new game(context,new Overworld());
+let game_inst = new game(context,new Board());
 
 export function getGame(){
   return game_inst;

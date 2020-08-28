@@ -5,7 +5,7 @@ import {velocity_collision_check} from "../../lib/collision";
 import { gravity_obj } from "../../lib/object";
 import {Poll_Mouse} from "../../lib/controls";
 import {Door} from "../objects/room_loader";
-import {Tester} from "./test_room";
+import {Board} from "./board";
 import { getGame } from "../../van";
 
 interface overworld_i{
@@ -14,7 +14,7 @@ interface overworld_i{
 
 export class Overworld extends room<overworld_i>{
   background_url="https://img.wallpapersafari.com/desktop/1920/1080/8/51/imD41l.jpg";
-  objects = [new Box(500,0,"box"),new Door([500,64],Tester),new Goomba(800,800,"player"),new StandingGoomba(801,900),new StandingGoomba(0,0,"cursor"),new Box(0,0)/*,new StandingGoomba(801,1000),new StandingGoomba(801,1100),new StandingGoomba(801,1200)*/]
+  objects = [new Box(500,0,"box"),new Door([500,64],Board),new Goomba(800,800,"player"),new StandingGoomba(801,900),new StandingGoomba(0,0,"cursor"),new Box(0,0)/*,new StandingGoomba(801,1000),new StandingGoomba(801,1100),new StandingGoomba(801,1200)*/]
   constructor(){
     super();
     this.state = {

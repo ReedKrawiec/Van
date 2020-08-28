@@ -68,7 +68,6 @@ tracker.addEventListener("mousemove", (e) => {
   last_y = y;
   x = e.clientX - rect.left; //x position within the element.
   y = e.clientY - rect.top;  //y position within the element.
-  console.log(e);
 
 })
 
