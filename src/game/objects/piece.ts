@@ -2,6 +2,7 @@ import {obj} from "../../lib/object";
 import {sprite,sprite_gen} from "../../lib/sprite";
 import {board_state, Board} from "../rooms/board";
 import {getGame} from "../../van";
+import { Unbind } from "../../lib/controls";
 
 export enum side{
   white,
@@ -23,7 +24,8 @@ interface piece_state{
     y:number
   },
   side:side,
-  type:piece_type
+  type:piece_type,
+  has_moved:boolean
 }
 
 export class piece extends obj<piece_state>{
@@ -38,7 +40,8 @@ export class piece extends obj<piece_state>{
         y:pos[1] * this.height
       },
       side,
-      type
+      type,
+      has_moved:false
     }
   }
   movetoCords(a:[number,number]){
@@ -152,7 +155,12 @@ export class piece extends obj<piece_state>{
     }
     return attacked;
   }
-  register_controls(){
+  unbind_controls(){
+    for(let a of this.binds){
+      Unbind(a);
+    }
+  }
+  bind_controls(){
     this.bindControl("Mouse1",()=>{
       let room = getGame().state.current_room as Board;
       if(room.state.turn === this.state.side){
@@ -168,16 +176,6 @@ export class piece extends obj<piece_state>{
         }
         room.state.attacked = valid_attacked;
         room.attack(valid_attacked);
-      }
-      else{
-        if(room.state.selected){
-          for(let g of room.state.selected.getAttacking()){
-            if(g[0] === this.getCords()[0] && g[1] === this.getCords()[1]){
-              room.state.turn = this.state.side;
-              this.delete();
-            }
-          } 
-        }
       }
     })
   }

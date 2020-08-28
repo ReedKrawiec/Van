@@ -34,27 +34,48 @@ export class move extends obj<move_state>{
         let room = getGame().state.current_room as Board;
         let p = room.get_piece(this.getCords()) as piece[];
         let s = room.state.selected;
-        console.log(room.state.selected);
-        console.log(this.getCords());
+        if(s.state.type === piece_type.king && !s.state.has_moved && this.getCords()[0] === 6){
+          let rooks = room.get_piece([7,s.getCords()[1]]);
+          rooks[0].movetoCords([5,s.getCords()[1]]);
+        }
+        if(s.state.type === piece_type.king && !s.state.has_moved && this.getCords()[0] === 2){
+          let rooks = room.get_piece([0,s.getCords()[1]]);
+          rooks[0].movetoCords([3,s.getCords()[1]]);
+        }
+        if(s.state.type === piece_type.pawn && !s.state.has_moved && s.state.side === side.white && this.getCords()[0] === 3){
+          room.state.white_board[this.getCords()[0]][this.getCords()[1] - 1].enpassent = true;
+        }
+        if(s.state.type === piece_type.pawn && !s.state.has_moved && s.state.side === side.black && this.getCords()[0] === 4){
+          room.state.black_board[this.getCords()[0]][this.getCords()[1] + 1].enpassent = true;
+        }
+        if(s.state.type === piece_type.pawn && s.state.side == side.black && room.get_meta(this.getCords(),side.white).enpassent){
+          let f = room.get_piece([this.getCords()[0],this.getCords()[1] + 1]);
+          room.remove_piece(f[0]);
+        }
+        if(s.state.type === piece_type.pawn && s.state.side == side.white && room.get_meta(this.getCords(),side.black).enpassent){
+          let f = room.get_piece([this.getCords()[0],this.getCords()[1] - 1]);
+          room.remove_piece(f[0]);
+        }
+        s.state.has_moved = true;
+        if(p.length > 0){
+          room.remove_piece(p[0]);
+        }
         if((this.getCords()[1] == 7 || this.getCords()[1] == 0) && s.state.type === piece_type.pawn){
           let qu = new Queen(this.getCords(),s.state.side);
           qu.load().then(()=>{
-            room.objects.push(qu);
-            room.state.pieces.push(qu);
-            s.delete();
+            room.add_piece(qu);
+            room.remove_piece(s);
           })
         }
-        
-        console.log(room.state.selected.getCords());
-        console.log(this.getCords());
         if(s.state.side === side.white){
-          room.state.turn = side.black;
+          room.change_side(side.black);
         }
         else if(s.state.side === side.black){
-          room.state.turn = side.white;
+          room.change_side(side.white);
         }
-        room.state.selected.movetoCords(this.getCords());
         room.clear_attacked();
+        room.state.selected.movetoCords(this.getCords());
+        
         room.state.attacked = [];
         room.state.selected = undefined;
       }
