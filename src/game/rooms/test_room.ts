@@ -4,7 +4,7 @@ import {room,apply_gravity} from "../../lib/room";
 import {velocity_collision_check} from "../../lib/collision";
 import {Door} from "../objects/room_loader";
 import {Overworld} from "./overworld";
-import {Poll_Mouse} from "../../lib/controls";
+import {Poll_Mouse, exec_type} from "../../lib/controls";
 import { getGame } from "../../van";
 
 export class Tester extends room<{}>{
@@ -17,7 +17,7 @@ objects = [new Box(500,500,"box"),new Door([500,564],Overworld),new Goomba(800,1
     };
   }
   register_controls(){
-    this.bindControl("Mouse1",async ()=>{
+    this.bindControl("mouse1",exec_type.once,async ()=>{
       let mouse_pos = Poll_Mouse();
       if(this.check_collisions({
         x:mouse_pos.x,

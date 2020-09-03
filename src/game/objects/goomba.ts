@@ -1,7 +1,7 @@
 import {velocity,obj_state,state_func} from "../../lib/state";
 import {sprite,sprite_gen} from "../../lib/sprite";
 import {gravity_obj,obj} from "../../lib/object";
-import {Poll_Mouse} from "../../lib/controls";
+import {Poll_Mouse, exec_type} from "../../lib/controls";
 import {collision_box} from "../../lib/collision";
 import {Bind} from "../../lib/controls";
 
@@ -61,107 +61,33 @@ export class Goomba extends gravity_obj<goomba_state>{
       this.gravity = !this.gravity;
     });
     */
-    this.bindControl("KeyA",()=>{
+    this.bindControl("KeyA",exec_type.repeat,()=>{
+      console.log("a");
       this.state.velocity.x = -3;
     });
-    this.bindControl("KeyD",()=>{
+    this.bindControl("KeyD",exec_type.once,()=>{
+      console.log("d");
       this.state.velocity.x = 3;
     });
-    this.bindControl("KeyW",()=>{
-      this.state.velocity.y += 15;
+    this.bindControl("KeyW",exec_type.once,()=>{
+      console.log("w");
+      if(!this.state.selected){
+        this.state.velocity.y += 15;
+      }
+      this.state.selected = true;
     });
   }
   
   statef(time:number){
-    /*
-    if(this.state.selected){
-      let mouse_position = Poll_Mouse();
-      if(mouse_position.y > mouse_position.last.y){
-        if(this.collision_check({
-          x:this.state.position.x,
-          y:this.state.position.y + this.height,
-          width:this.width,
-          height:1
-        }).length == 0){
-          this.state.position.y = mouse_position.y - this.height/2;
-        }
-      }
-      else if(mouse_position.y < mouse_position.last.y){
-        if(this.collision_check({
-          x:this.state.position.x,
-          y:this.state.position.y - 1,
-          width:this.width,
-          height:1
-        }).length == 0){
-          this.state.position.y = mouse_position.y - this.height/2;
-        }
-      }
-      if(mouse_position.x < mouse_position.last.x){
-        if(this.collision_check({
-          x:this.state.position.x - 1,
-          y:this.state.position.y,
-          width:1,
-          height:this.height
-        }).length == 0){
-          this.state.position.x = mouse_position.x - this.width/2;
-        }
-      }
-      else if(mouse_position.x > mouse_position.last.x){
-        if(this.collision_check({
-          x:this.state.position.x + this.width,
-          y:this.state.position.y,
-          width:1,
-          height:this.height
-        }).length == 0){
-          this.state.position.x = mouse_position.x - this.width/2;
-        }
-      }
-    }
-    else if(getGame().getRoom().check_collisions({
+    let jumping_check = this.collision_check({
       x:this.state.position.x,
       y:this.state.position.y - 1,
       width:this.width,
       height:1
-    }).length > 0){
-      let left_fall_box:collision_box = {
-        x:this.state.position.x - this.width - 3,
-        y:this.state.position.y - this.height,
-        height:this.height,
-        width:this.width
-      }
-      let left_wall_box:collision_box = {
-        x:this.state.position.x - 3,
-        y:this.state.position.y,
-        height:this.height,
-        width:3
-      }
-      let right_fall_box:collision_box = {
-        x:this.state.position.x + this.width + 3,
-        y:this.state.position.y - this.height,
-        height:this.height,
-        width:this.width
-      }
-      let right_wall_box:collision_box = {
-        x:this.state.position.x + this.width,
-        y:this.state.position.y,
-        height:this.height,
-        width:3
-      }
-      if(this.state.direction == direction.right){
-        this.state.velocity.x = 3;
-        if(getGame().getRoom().check_collisions(right_fall_box).length == 0 || getGame().getRoom().check_collisions(right_wall_box).length > 0){
-          this.state.direction = direction.left;
-        }
-      }
-      else if(this.state.direction == direction.left){
-        this.state.velocity.x = -3;
-        if(getGame().getRoom().check_collisions(left_fall_box).length == 0 || getGame().getRoom().check_collisions(left_wall_box).length > 0){
-          this.state.direction = direction.right;
-        }
-      }
+    }).length > 0;
+    if(jumping_check){
+      this.state.selected = false;
     }
-    */
-
   }
 }
 
@@ -189,7 +115,7 @@ export class StandingGoomba extends gravity_obj<goomba_state>{
     }
   }
   register_controls(){
-    this.bindControl("Mouse1",()=>{
+    this.bindControl("mouse1",exec_type.once,()=>{
       this.state.selected = !this.state.selected;
       this.gravity = !this.gravity;
     })

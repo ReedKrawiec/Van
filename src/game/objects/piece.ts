@@ -2,7 +2,7 @@ import {obj} from "../../lib/object";
 import {sprite,sprite_gen} from "../../lib/sprite";
 import {board_state, Board} from "../rooms/board";
 import {getGame} from "../../van";
-import { Unbind } from "../../lib/controls";
+import { Unbind, exec_type } from "../../lib/controls";
 
 export enum side{
   white,
@@ -161,7 +161,7 @@ export class piece extends obj<piece_state>{
     }
   }
   bind_controls(){
-    this.bindControl("Mouse1",()=>{
+    this.bindControl("mouse1",exec_type.once,()=>{
       let room = getGame().state.current_room as Board;
       if(room.state.turn === this.state.side){
         room.state.selected = this;

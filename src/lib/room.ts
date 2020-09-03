@@ -3,7 +3,7 @@ import { sprite } from "./sprite";
 import { obj_state } from "./state";
 import { velocity_collision_check,check_collisions,collision_box,check_all_collisions,check_all_objects} from "./collision";
 import {render_collision_box,DEBUG} from "../van";
-import {Bind,control_func} from "./controls";
+import {Bind,control_func, exec_type} from "./controls";
 import { Overworld } from "../game/rooms/overworld";
 
 export function apply_gravity(ob:gravity_obj<unknown>,grav_const:number, grav_max:number){
@@ -46,8 +46,8 @@ export class room<T>{
       }
     }
   }
-  bindControl(key:string,func:control_func){
-    Bind(key,func); 
+  bindControl(key:string,x:exec_type,func:control_func){
+    Bind(key,func,x); 
   }
   check_collisions(box:collision_box,exempt?:string):Array<obj<unknown>>{
     if(DEBUG){

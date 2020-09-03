@@ -2,6 +2,7 @@ import {sprite} from "./sprite";
 import {GetViewportDimensions} from "../van";
 import {obj} from "./object";
 import {obj_state} from "./state";
+import {HudText,TextSetting} from "./hud";
 
 interface camera_state{
   scaling:number,
@@ -65,6 +66,17 @@ interface sprite_args{
 interface renderer_args{
   context:CanvasRenderingContext2D,
   camera:Camera
+}
+
+export const text_renderer = (r:renderer_args,s:TextSetting) => {
+  let vheight = GetViewportDimensions().height;
+  r.context.font = `${s.font.size}px ${s.font.font}`;
+  if(s.font.max_width){
+    r.context.fillText(s.font.text,s.x,vheight - s.y,s.font.max_width);
+  }
+  else{
+    r.context.fillText(s.font.text,s.x,vheight - s.y);
+  }
 }
 
 export const sprite_renderer = (r:renderer_args,s:sprite_args) => {

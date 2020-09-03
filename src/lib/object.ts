@@ -3,7 +3,7 @@ import {render_func} from "./render";
 import {sprite} from "./sprite";
 import {collision_box} from "./collision";
 import {getGame} from "../van";
-import {Unbind,Bind,control_func} from "./controls";
+import {Unbind,Bind,control_func, exec_type} from "./controls";
 
 interface obj_i<T>{
   statef:state_func<T>,
@@ -51,13 +51,13 @@ export class obj<T>{
       });
     })
   }
-  bindControl(key:string,func:control_func){
-    if(key == "Mouse1"){
-      let b = Bind(key,func,this);
+  bindControl(key:string,x:exec_type,func:control_func){
+    if(key == "mouse1"){
+      let b = Bind(key,func,x,this);
       this.binds.push(b);
     }
     else{
-      this.binds.push(Bind(key,func)); 
+      this.binds.push(Bind(key,func,x)); 
     }
   }
   register_controls(){

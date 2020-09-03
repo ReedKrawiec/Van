@@ -3,6 +3,7 @@ import {getGame} from "../../van";
 import {Board,side} from "../rooms/board";
 import {piece,piece_type} from "./piece";
 import { Queen } from "./queen";
+import { exec_type } from "../../lib/controls";
 
 interface move_state{
   position:{
@@ -29,7 +30,7 @@ export class move extends obj<move_state>{
     return [this.state.position.x/100,this.state.position.y/100];
   }
   register_controls(){
-    this.bindControl("Mouse1",()=>{
+    this.bindControl("mouse1",exec_type.once,()=>{
       if(this.render){
         let room = getGame().state.current_room as Board;
         let p = room.get_piece(this.getCords()) as piece[];
@@ -42,10 +43,10 @@ export class move extends obj<move_state>{
           let rooks = room.get_piece([0,s.getCords()[1]]);
           rooks[0].movetoCords([3,s.getCords()[1]]);
         }
-        if(s.state.type === piece_type.pawn && !s.state.has_moved && s.state.side === side.white && this.getCords()[0] === 3){
+        if(s.state.type === piece_type.pawn && !s.state.has_moved && s.state.side === side.white && this.getCords()[1] === 3){
           room.state.white_board[this.getCords()[0]][this.getCords()[1] - 1].enpassent = true;
         }
-        if(s.state.type === piece_type.pawn && !s.state.has_moved && s.state.side === side.black && this.getCords()[0] === 4){
+        if(s.state.type === piece_type.pawn && !s.state.has_moved && s.state.side === side.black && this.getCords()[1] === 4){
           room.state.black_board[this.getCords()[0]][this.getCords()[1] + 1].enpassent = true;
         }
         if(s.state.type === piece_type.pawn && s.state.side == side.black && room.get_meta(this.getCords(),side.white).enpassent){

@@ -1,5 +1,6 @@
 import {gravity_obj} from "../../lib/object";
 import {obj_state} from "../../lib/state";
+import { exec_type } from "../../lib/controls";
 
 export class Box extends gravity_obj<obj_state>{
   sprite_url = "http://localhost/src/game/objects/box.png"
@@ -25,7 +26,7 @@ export class Box extends gravity_obj<obj_state>{
     
   }
   register_controls(){
-    this.bindControl("Mouse1",()=>{
+    this.bindControl("mouse1",exec_type.once,()=>{
       this.delete();
     })
   }

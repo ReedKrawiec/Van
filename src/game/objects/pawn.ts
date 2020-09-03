@@ -24,6 +24,8 @@ export class Pawn extends piece{
       let right = room.get_piece(right_cords);
       let left_en = room.get_meta(left_cords,side.black);
       let right_en = room.get_meta(right_cords,side.black);
+      console.log(left_en);
+      console.log(right_en);
       if((cords[0] - 1 >= 0) && ((left.length > 0 && left[0].state.side !== this.state.side) || (left_en && left_en.enpassent))){
         attacked.push(left_cords);
       }

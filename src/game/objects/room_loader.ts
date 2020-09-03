@@ -1,6 +1,7 @@
 import {gravity_obj} from "../../lib/object";
 import {room} from "../../lib/room";
 import {getGame} from "../../van";
+import { exec_type } from "../../lib/controls";
 
 interface loader_func{
   ():room<unknown>
@@ -45,7 +46,7 @@ export class Door extends gravity_obj<loader_state>{
     getGame().loadRoom(this.create_room());
   }
   register_controls(){
-    this.bindControl("Mouse1", ()=>{
+    this.bindControl("mouse1",exec_type.once, ()=>{
       this.transport()
     })
   }

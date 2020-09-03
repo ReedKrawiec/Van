@@ -5,7 +5,9 @@ import {obj_state} from "./lib/state";
 import {room} from "./lib/room";
 import {sprite} from "./lib/sprite";
 import { collision_box } from "./lib/collision";
-import {sprite_renderer,rect_renderer, Camera} from "./lib/render";
+import {sprite_renderer,rect_renderer, text_renderer, Camera} from "./lib/render";
+import {HUD} from "./lib/hud";
+import {ExecuteRepeatBinds} from "./lib/controls";
 
 import {Overworld} from "./game/rooms/overworld";
 import {Board} from "./game/rooms/board";
@@ -62,6 +64,7 @@ interface game_state{
   current_room:room<unknown>,
   camera:Camera,
   canvas:HTMLCanvasElement,
+  hud:HUD,
   player_state:{
     power:number
   }
@@ -70,13 +73,14 @@ interface game_state{
 export class game{
   state:game_state;
   context:CanvasRenderingContext2D;
-  constructor(ctx:CanvasRenderingContext2D,a:room<unknown>){
+  constructor(ctx:CanvasRenderingContext2D,a:room<unknown>,h:HUD){
     this.state = {
       canvas:canvas_element,
       logic:undefined,
       context:ctx,
       camera:new Camera(0,0,vwidth,vheight,1,false),
       current_room: undefined,
+      hud:h,
       player_state:{
         power:0
       }
@@ -121,6 +125,26 @@ export class game{
       }
       rect_renderer(context,rect,box.x,box.y,"#FF0000",this.state.camera);
     }
+    let graphics = this.state.hud.graphic_elements;
+    let text_elements = this.state.hud.text_elements;
+    for(let a of graphics){
+      let st = a.state as obj_state;
+      if(a.render){
+        sprite_renderer(render_args,{
+          sprite:a.renderf(t),
+          x:st.position.x,
+          y:st.position.y
+        });
+      }
+    }
+    for(let a of text_elements){
+      let st = a.state;
+      text_renderer(render_args,{
+        x:st.position.x,
+        y:st.position.y,
+        font:a.renderf(t)
+      })
+    }
     requestAnimationFrame((a)=>{this.render(a)}); 
   }
   start_logic(a:number){
@@ -129,6 +153,8 @@ export class game{
       let time_since = new_time.getTime() - last_time.getTime();
       last_time = new_time;
       this.state.current_room.statef(new_time.getTime());
+      this.state.hud.statef(new_time.getTime());
+      ExecuteRepeatBinds();
     },a);
   }
   getRoom(){
@@ -152,7 +178,7 @@ export class game{
   }
 }
 
-let game_inst = new game(context,new Board());
+let game_inst = new game(context,new Overworld(),new HUD());
 
 export function getGame(){
   return game_inst;

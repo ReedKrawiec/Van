@@ -3,7 +3,7 @@ import {StandingGoomba,Goomba, goomba_state} from "../objects/goomba";
 import {Box} from "../objects/box"; 
 import {velocity_collision_check} from "../../lib/collision";
 import { gravity_obj } from "../../lib/object";
-import {Poll_Mouse} from "../../lib/controls";
+import {Poll_Mouse, exec_type} from "../../lib/controls";
 import {Door} from "../objects/room_loader";
 import {Board} from "./board";
 import { getGame } from "../../van";
@@ -22,7 +22,8 @@ export class Overworld extends room<overworld_i>{
     };
   }
   register_controls(){
-    this.bindControl("Mouse1",async ()=>{
+    this.bindControl("mousedown",exec_type.repeat,async ()=>{
+      console.log("yep");
       let mouse_pos = Poll_Mouse();
       if(this.check_collisions({
         x:mouse_pos.x,
@@ -40,8 +41,10 @@ export class Overworld extends room<overworld_i>{
   }
   statef(time:number){
     for(let a = 0;a < this.objects.length; a++){
+      
       apply_gravity(this.objects[a],-.5,-15);
       velocity_collision_check(this.objects[a],this.objects);
+
       this.objects[a].statef(time);
     }
     let player = this.getObj("player") as Goomba;

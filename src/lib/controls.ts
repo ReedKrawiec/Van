@@ -36,7 +36,7 @@ target.addEventListener("click",(e)=>{
   let d = [...all_binds];
   for(let a = 0;a < d.length;a++){
     let selected = d[a];
-    if(selected.type === btype.mouse && selected.key === "Mouse1"){
+    if(selected.type === btype.mouse && selected.key === "mouse1" && selected.execute == exec_type.once){
       if(selected.obj !== undefined){
         if(selected.obj.collides_with_box(box)){
           selected.function();
@@ -49,16 +49,81 @@ target.addEventListener("click",(e)=>{
   }  
 })
 
+target.addEventListener("mousedown", (e) => {
+  let d = [...all_binds];
+  for (let a = 0; a < all_binds.length; a++) {
+    let selected = d[a];
+    if (selected.type === btype.mouse && selected.key === e.type  && !selected.executed) {
+      if(selected.execute === exec_type.once){
+        selected.function();
+      }
+      else if(selected.execute === exec_type.repeat){
+        active_binds.push(selected);
+      }
+      selected.executed = true;
+    }
+  }
+})
 
+target.addEventListener("mouseup", (e) => {
+  let d = [...all_binds];
+  for (let a = 0; a < all_binds.length; a++) {
+    let selected = d[a];
+    if (selected.type === btype.mouse && (selected.key === e.type || selected.key == "mousedown") && selected.executed) {
+      if(selected.execute === exec_type.once ){
+        selected.executed = false;
+      }
+      else if(selected.execute === exec_type.repeat){
+        let g = [...active_binds];
+        for(let a = 0; a < g.length;a++){
+          if(g[a].id === selected.id){
+            selected.executed = false;
+            active_binds.splice(a,1);
+            break;
+          }
+        }
+      }
+    }
+  }
+})
 
 window.addEventListener("keydown", (e) => {
   let d = [...all_binds];
   for (let a = 0; a < all_binds.length; a++) {
     let selected = d[a];
-    if (selected.type === btype.keyboard && selected.key === e.code) {
-      selected.function();
+    if (selected.type === btype.keyboard && selected.key === e.code  && !selected.executed) {
+      if(selected.execute === exec_type.once){
+        selected.function();
+      }
+      else if(selected.execute === exec_type.repeat){
+        active_binds.push(selected);
+      }
+      selected.executed = true;
     }
   }
+  
+})
+window.addEventListener("keyup", (e) => {
+  let d = [...all_binds];
+  for (let a = 0; a < all_binds.length; a++) {
+    let selected = d[a];
+    if (selected.type === btype.keyboard && selected.key === e.code && selected.executed) {
+      if(selected.execute === exec_type.once ){
+        selected.executed = false;
+      }
+      else if(selected.execute === exec_type.repeat){
+        let g = [...active_binds];
+        for(let a = 0; a < g.length;a++){
+          if(g[a].id === selected.id){
+            selected.executed = false;
+            active_binds.splice(a,1);
+            break;
+          }
+        }
+      }
+    }
+  }
+
 })
 let tracker = document.getElementById("target");
 tracker.addEventListener("mousemove", (e) => {
@@ -81,7 +146,9 @@ interface bind{
   type:btype,
   id:number,
   function:control_func,
-  obj?:obj<unknown>
+  execute:exec_type,
+  obj?:obj<unknown>,
+  executed?:boolean
 }
 
 let x = 0;
@@ -94,6 +161,7 @@ let bind_count = 0;
 
 let all_binds:Array<bind> = []
 
+let active_binds:Array<bind> = [];
 
 export function Poll_Mouse():mousePos{
   let height = GetViewportDimensions().height;
@@ -111,6 +179,14 @@ export function Poll_Mouse():mousePos{
   })
 }
 
+export function ExecuteRepeatBinds(){
+  for(let a of active_binds){
+    if(a.execute === exec_type.repeat){
+      a.function();
+    }
+  }
+}
+
 export function Unbind(bind_id:number){
   for(let a = 0;a < all_binds.length; a++){
     if(all_binds[a].id == bind_id){
@@ -121,23 +197,32 @@ export function Unbind(bind_id:number){
 
 }
 
+export enum exec_type{
+  once,
+  repeat
+}
+
 let id = 0;
-export function Bind(keyname:string,func:control_func,object?:obj<unknown>):number{
-  if(keyname.slice(0,5) === "Mouse"){
+export function Bind(keyname:string,func:control_func,type:exec_type,object?:obj<unknown>):number{
+  if(keyname.slice(0,5) === "mouse"){
     all_binds.push({
       key:keyname,
       type:btype.mouse,
-      id:id,
+      id,
       function:func,
-      obj:object
+      obj:object,
+      execute:type,
+      executed:false
     })
   }
   else{
     all_binds.push({
       key:keyname,
       type:btype.keyboard,
-      id:id,
-      function:func
+      id,
+      function:func,
+      execute:type,
+      executed:false
     })
   }
   id++;
