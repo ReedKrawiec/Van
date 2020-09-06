@@ -1,8 +1,8 @@
-import {gravity_obj} from "../../lib/object";
+import {platformer_obj} from "./platformer_obj";
 import {obj_state} from "../../lib/state";
 import { exec_type } from "../../lib/controls";
 
-export class Box extends gravity_obj<obj_state>{
+export class Box extends platformer_obj<obj_state>{
   sprite_url = "http://localhost/src/game/objects/box.png"
   collision = true
   height = 64;

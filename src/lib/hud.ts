@@ -17,7 +17,8 @@ export interface Font{
   size:number,
   font:string,
   color:string,
-  text:string
+  text:string,
+  align:CanvasTextAlign
 }
 
 export interface HudText{
@@ -30,24 +31,11 @@ export interface HudText{
   font:string;
   color:string;
   text?:string;
+  align?:CanvasTextAlign;
 }
 export class HUD{
   graphic_elements:Array<obj<unknown>> = [];
   text_elements:Array<Text> = [];
-  constructor(){
-   this.text_elements.push(new Text({
-    position:{
-      x:10,
-      y:750
-    },
-    size:44,
-    font: "Alata",
-    color:"white"
-   },()=> {
-     let x = getGame().getRoom().getObj("player") as Goomba;
-     return x.state.selected + "";
-    })); 
-  }
   statef(a:number){
     for(let x of this.graphic_elements){
       x.statef(a);
@@ -62,6 +50,9 @@ export class Text{
   get_func:HudTextGetFunc;
   state:HudText;
   constructor(a:HudText,b:HudTextGetFunc){
+    if(!a.align){
+      a.align = "center";
+    }
     this.state = a;
     if(!this.state.text){
       this.state.text = "";
@@ -72,12 +63,14 @@ export class Text{
    this.state.text = this.get_func();
   }
   renderf(a:number):Font{
-    let {size,color,font,text} = this.state;
+    let {size,color,font,text,max_width,align} = this.state;
     return {
       size,
       color,
       font,
-      text
+      text,
+      max_width,
+      align
     };
   }
 }

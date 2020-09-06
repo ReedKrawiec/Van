@@ -71,6 +71,8 @@ interface renderer_args{
 export const text_renderer = (r:renderer_args,s:TextSetting) => {
   let vheight = GetViewportDimensions().height;
   r.context.font = `${s.font.size}px ${s.font.font}`;
+  r.context.fillStyle = s.font.color;
+  r.context.textAlign = s.font.align;
   if(s.font.max_width){
     r.context.fillText(s.font.text,s.x,vheight - s.y,s.font.max_width);
   }
@@ -82,8 +84,8 @@ export const text_renderer = (r:renderer_args,s:TextSetting) => {
 export const sprite_renderer = (r:renderer_args,s:sprite_args) => {
   let camera = r.camera;
   let vheight = GetViewportDimensions().height;
-  let final_x = ((s.x - camera.state.position.x) * r.camera.state.scaling);
-  let final_y = ((vheight - s.y - s.sprite.sprite_height + camera.state.position.y) * r.camera.state.scaling);
+  let final_x = ((s.x - camera.state.position.x + camera.state.dimensions.width/2 - s.sprite.sprite_width/2) * r.camera.state.scaling);
+  let final_y = ((vheight - s.y - camera.state.dimensions.height/2 - s.sprite.sprite_height/2 + camera.state.position.y) * r.camera.state.scaling);
   let height = s.sprite.sprite_height * r.camera.state.scaling;
   let width = s.sprite.sprite_width * r.camera.state.scaling;
   r.context.drawImage(
@@ -101,8 +103,8 @@ export const sprite_renderer = (r:renderer_args,s:sprite_args) => {
 
 export const rect_renderer = (context:CanvasRenderingContext2D,rect:rectangle,x:number,y:number,color:string,camera:Camera) => {
   let vheight = GetViewportDimensions().height;
-  let final_x = ((x - camera.state.position.x) * camera.state.scaling);
-  let final_y = ((vheight - y - rect.height + camera.state.position.y) * camera.state.scaling);
+  let final_x = ((x - camera.state.position.x + camera.state.dimensions.width/2 - rect.width/2) * camera.state.scaling);
+  let final_y = ((vheight - y - rect.height/2 - camera.state.dimensions.height/2 + camera.state.position.y) * camera.state.scaling);
   let height = rect.height * camera.state.scaling;
   let width = rect.width * camera.state.scaling;
   context.strokeStyle = color;

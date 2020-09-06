@@ -1,6 +1,7 @@
 import {velocity,obj_state,state_func} from "../../lib/state";
 import {sprite,sprite_gen} from "../../lib/sprite";
-import {gravity_obj,obj} from "../../lib/object";
+import {obj} from "../../lib/object";
+import {platformer_obj} from "./platformer_obj";
 import {Poll_Mouse, exec_type} from "../../lib/controls";
 import {collision_box} from "../../lib/collision";
 import {Bind} from "../../lib/controls";
@@ -19,7 +20,7 @@ export interface goomba_state extends obj_state{
   selected:boolean
 }
 
-export class Goomba extends gravity_obj<goomba_state>{
+export class Goomba extends platformer_obj<goomba_state>{
   sprite_url = "http://localhost/src/game/objects/goomba.png";
   height = 64;
   width = 64;
@@ -53,49 +54,64 @@ export class Goomba extends gravity_obj<goomba_state>{
   }
   
   register_controls(){
-    /*
-    this.bindControl("Mouse1",()=>{
-      this.state.velocity.x = 0;
-      this.state.velocity.y = 0;
-      this.state.selected = !this.state.selected;
-      this.gravity = !this.gravity;
-    });
-    */
     this.bindControl("KeyA",exec_type.repeat,()=>{
-      console.log("a");
-      this.state.velocity.x = -3;
+      if(this.state.velocity.x > -10){
+        this.state.velocity.x = this.state.velocity.x - 0.5;
+      }
     });
-    this.bindControl("KeyD",exec_type.once,()=>{
-      console.log("d");
-      this.state.velocity.x = 3;
+    this.bindControl("KeyD",exec_type.repeat,()=>{
+      if(this.state.velocity.x < 10){
+        this.state.velocity.x = this.state.velocity.x + 0.5;
+      }
     });
     this.bindControl("KeyW",exec_type.once,()=>{
-      console.log("w");
       if(!this.state.selected){
         this.state.velocity.y += 15;
       }
-      this.state.selected = true;
     });
   }
   
   statef(time:number){
-    let jumping_check = this.collision_check({
+    let bottom_collisions = this.collision_check({
       x:this.state.position.x,
-      y:this.state.position.y - 1,
+      y:this.state.position.y - 1 - this.height/2,
       width:this.width,
       height:1
-    }).length > 0;
+    });
+    let jumping_check = bottom_collisions.length > 0;
     if(jumping_check){
       this.state.selected = false;
+      let collider = bottom_collisions[0] as platformer_obj<obj_state>;
+      if(collider.enemy){
+        this.state.velocity.y = 12;
+        collider.delete();
+      }
+    }
+    else{
+      this.state.selected = true;
+      
+    }
+    if(this.state.velocity.x > 0){
+      this.state.velocity.x = this.state.velocity.x - 0.1;
+      if(this.state.velocity.x < 0){
+        this.state.velocity.x = 0;
+      }
+    }
+    else if(this.state.velocity.x < 0){
+      this.state.velocity.x = this.state.velocity.x + 0.1;
+      if(this.state.velocity.x > 0){
+        this.state.velocity.x = 0;
+      }
     }
   }
 }
 
-export class StandingGoomba extends gravity_obj<goomba_state>{
+export class StandingGoomba extends platformer_obj<goomba_state>{
   sprite_url = "http://localhost/src/game/objects/goomba.png";
   height = 64;
   width = 64;
   collision = true;
+  enemy = true;
   constructor(x:number,y:number,id:string = undefined){
     super();
     if(id){

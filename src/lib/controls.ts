@@ -69,18 +69,17 @@ target.addEventListener("mouseup", (e) => {
   let d = [...all_binds];
   for (let a = 0; a < all_binds.length; a++) {
     let selected = d[a];
-    if (selected.type === btype.mouse && (selected.key === e.type || selected.key == "mousedown") && selected.executed) {
-      if(selected.execute === exec_type.once ){
-        selected.executed = false;
-      }
-      else if(selected.execute === exec_type.repeat){
-        let g = [...active_binds];
-        for(let a = 0; a < g.length;a++){
-          if(g[a].id === selected.id){
-            selected.executed = false;
-            active_binds.splice(a,1);
-            break;
-          }
+    if (selected.type === btype.mouse && (selected.key === e.type) && selected.executed && selected.execute === exec_type.once) {
+       selected.executed = false;
+      
+    }
+    else if(selected.type === btype.mouse && (selected.key === e.type || selected.key == "mousedown") && selected.executed && selected.execute === exec_type.repeat){
+      let g = [...active_binds];
+      for(let a = 0; a < g.length;a++){
+        if(g[a].id === selected.id){
+          selected.executed = false;
+          active_binds.splice(a,1);
+          break;
         }
       }
     }
@@ -170,8 +169,8 @@ export function Poll_Mouse():mousePos{
   let vratio = parseFloat(window.getComputedStyle(canvas).height)/GetViewportDimensions().height;
   let camera = getGame().state.camera;
   return ({
-    x: (x/wratio/camera.state.scaling + camera.state.position.x) ,
-    y: ((height - y/vratio)/camera.state.scaling + camera.state.position.y),
+    x: (x/wratio/camera.state.scaling + camera.state.position.x - camera.state.dimensions.width/2) ,
+    y: ((height - y/vratio)/camera.state.scaling + camera.state.position.y - camera.state.dimensions.height/2),
     last:{
       x: (x/wratio/camera.state.scaling + camera.state.position.x),
       y: ((height - y/vratio)/camera.state.scaling + camera.state.position.y)

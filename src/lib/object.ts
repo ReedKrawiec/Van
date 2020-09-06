@@ -25,11 +25,13 @@ export class obj<T>{
   sprite_url = "";
   sprite_sheet:HTMLImageElement;
   state:T;
-  height:number = undefined;
-  width:number = undefined;
+  height:number;
+  width:number;
   collision:boolean = false;
+  collision_box:collision_box
   id:string;
   binds:Array<number>;
+  rotation:number = 0;
   render = true;
   getState(){
     return this.state;
@@ -81,16 +83,30 @@ export class obj<T>{
   collides_with_box(a:collision_box):boolean{
     let st = this.state as unknown as obj_state;
     let hcollides = false, vcollides = false;
-    if(st.position.x >= a.x && st.position.x < (a.x + a.width)){
+    let ob = {
+      left:(st.position.x - this.width/2),
+      right:(st.position.x + this.width/2),
+      top:(st.position.y + this.height/2),
+      bottom:(st.position.y - this.height/2)
+    }
+    
+    let box = {
+      left:(a.x - a.width/2),
+      right:(a.x + a.width/2),
+      top:(a.y + a.height/2),
+      bottom:(a.y - a.height/2)
+    }
+
+    if(ob.left >= box.left && ob.left < box.right){
       hcollides = true;
     }
-    if(a.x > st.position.x && a.x < (st.position.x + this.width)){
+    if(box.left > ob.left && box.left < ob.right){
       hcollides = true;
     }
-    if(st.position.y >= a.y && st.position.y < (a.y + a.height)){
+    if(ob.bottom >= box.bottom && ob.bottom < box.top){
       vcollides = true;
     }
-    if(a.y > st.position.y && a.y < (st.position.y + this.height)){
+    if(box.bottom > ob.bottom && box.bottom < ob.top){
       vcollides = true;
     }
     return hcollides && vcollides;

@@ -5,6 +5,7 @@ import { velocity_collision_check,check_collisions,collision_box,check_all_colli
 import {render_collision_box,DEBUG} from "../van";
 import {Bind,control_func, exec_type} from "./controls";
 import { Overworld } from "../game/rooms/overworld";
+import {HUD} from "../lib/hud";
 
 export function apply_gravity(ob:gravity_obj<unknown>,grav_const:number, grav_max:number){
   let st = ob.state as obj_state;
@@ -21,7 +22,8 @@ export class room<T>{
   background_url: string;
   background: HTMLImageElement;
   objects: Array<obj<unknown>>
-  state: T
+  state: T;
+  hud:HUD
   load() {
     let _this = this;
     return new Promise(async (resolve, reject) => {
@@ -45,6 +47,9 @@ export class room<T>{
         a--;
       }
     }
+  }
+  registerHUD():HUD{
+    return undefined;
   }
   bindControl(key:string,x:exec_type,func:control_func){
     Bind(key,func,x); 

@@ -10,7 +10,6 @@ import {HUD} from "./lib/hud";
 import {ExecuteRepeatBinds} from "./lib/controls";
 
 import {Overworld} from "./game/rooms/overworld";
-import {Board} from "./game/rooms/board";
 
 let canvas_element:HTMLCanvasElement = document.getElementById("target") as HTMLCanvasElement;
 let context:CanvasRenderingContext2D = canvas_element.getContext("2d");
@@ -27,6 +26,8 @@ let vheight = canvas_element.height;
 let logic_loop_interval:number = 1000/60;  
 
 let last_time = new Date();
+
+let last_render_time = 0;
 
 interface dimensions{
   height:number,
@@ -64,7 +65,6 @@ interface game_state{
   current_room:room<unknown>,
   camera:Camera,
   canvas:HTMLCanvasElement,
-  hud:HUD,
   player_state:{
     power:number
   }
@@ -73,14 +73,13 @@ interface game_state{
 export class game{
   state:game_state;
   context:CanvasRenderingContext2D;
-  constructor(ctx:CanvasRenderingContext2D,a:room<unknown>,h:HUD){
+  constructor(ctx:CanvasRenderingContext2D,a:room<unknown>){
     this.state = {
       canvas:canvas_element,
       logic:undefined,
       context:ctx,
       camera:new Camera(0,0,vwidth,vheight,1,false),
       current_room: undefined,
-      hud:h,
       player_state:{
         power:0
       }
@@ -88,6 +87,8 @@ export class game{
     this.loadRoom(a);
   }
   render(t:number){
+    let time = t - last_render_time
+    last_render_time = t;
     this.state.context.clearRect(0,0,vwidth,vheight);
     this.state.context.fillStyle="black";
     this.state.context.fillRect(0,0,vwidth,vheight);
@@ -102,7 +103,7 @@ export class game{
       camera:this.state.camera,
     };
     sprite_renderer(render_args,{
-      sprite:this.state.current_room.renderf(t),
+      sprite:this.state.current_room.renderf(time),
       x:0,
       y:0
     });
@@ -110,7 +111,7 @@ export class game{
       let st = a.state as obj_state;
       if(a.render){
         sprite_renderer(render_args,{
-          sprite:a.renderf(t),
+          sprite:a.renderf(time),
           x:st.position.x,
           y:st.position.y
         });
@@ -125,25 +126,27 @@ export class game{
       }
       rect_renderer(context,rect,box.x,box.y,"#FF0000",this.state.camera);
     }
-    let graphics = this.state.hud.graphic_elements;
-    let text_elements = this.state.hud.text_elements;
-    for(let a of graphics){
-      let st = a.state as obj_state;
-      if(a.render){
-        sprite_renderer(render_args,{
-          sprite:a.renderf(t),
-          x:st.position.x,
-          y:st.position.y
-        });
+    if(this.state.current_room.hud){
+      let graphics = this.state.current_room.hud.graphic_elements;
+      let text_elements = this.state.current_room.hud.text_elements;
+      for(let a of graphics){
+        let st = a.state as obj_state;
+        if(a.render){
+          sprite_renderer(render_args,{
+            sprite:a.renderf(t),
+            x:st.position.x,
+            y:st.position.y
+          });
+        }
       }
-    }
-    for(let a of text_elements){
-      let st = a.state;
-      text_renderer(render_args,{
-        x:st.position.x,
-        y:st.position.y,
-        font:a.renderf(t)
-      })
+      for(let a of text_elements){
+        let st = a.state;
+        text_renderer(render_args,{
+          x:st.position.x,
+          y:st.position.y,
+          font:a.renderf(t)
+        })
+      }
     }
     requestAnimationFrame((a)=>{this.render(a)}); 
   }
@@ -153,15 +156,17 @@ export class game{
       let time_since = new_time.getTime() - last_time.getTime();
       last_time = new_time;
       this.state.current_room.statef(new_time.getTime());
-      this.state.hud.statef(new_time.getTime());
-      ExecuteRepeatBinds();
+      if(this.state.current_room.hud){
+        this.state.current_room.hud.statef(new_time.getTime());
+      }
+        ExecuteRepeatBinds();
     },a);
   }
   getRoom(){
     return this.state.current_room;
   }
   async loadRoom(x:room<unknown>){
-
+    x.hud = x.registerHUD();
     if(this.state.current_room !== undefined){
       while(this.state.current_room.objects.length > 0){
         this.state.current_room.objects[0].delete();
@@ -178,7 +183,7 @@ export class game{
   }
 }
 
-let game_inst = new game(context,new Overworld(),new HUD());
+let game_inst = new game(context,new Overworld());
 
 export function getGame(){
   return game_inst;

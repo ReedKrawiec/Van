@@ -41,12 +41,12 @@ export function check_collisions(c: collision_box, objs: Array<obj<unknown>>, ex
       return a;
     }
   }
-  return undefined;
+  return null;
 }
 
 function velocity_max(velocity:number,box:collision_box,objs:Array<obj<unknown>>, exemption:string,dir:direction){
   let collision = check_collisions(box, objs, exemption);
-  if(collision == undefined){
+  if(collision == null){
     return velocity;
   }
   else{
@@ -55,16 +55,16 @@ function velocity_max(velocity:number,box:collision_box,objs:Array<obj<unknown>>
     let orig_st = origin.state as obj_state;
     let collider_st = collider.state as obj_state;
     if(dir == direction.left){
-      return orig_st.position.x - (collider_st.position.x + collider.width);
+      return (orig_st.position.x - origin.width/2) - (collider_st.position.x + collider.width/2);
     }
     else if(dir == direction.right){
-      return collider_st.position.x - (orig_st.position.x + origin.width);
+      return (collider_st.position.x - collider.width/2) - (orig_st.position.x + origin.width/2);
     }
     else if(dir == direction.down){
-      return orig_st.position.y - (collider_st.position.y + collider.height);
+      return (orig_st.position.y - origin.height/2) - (collider_st.position.y + collider.height/2);
     }
     else if(dir == direction.up){
-      return collider_st.position.y - (orig_st.position.y + origin.height);
+      return (collider_st.position.y - collider.height/2) - (orig_st.position.y + origin.height/2);
     }
   }
 }
@@ -76,7 +76,7 @@ export function velocity_collision_check(object:obj<unknown>,list:Array<obj<unkn
   let y_vel = st.velocity.y;
   if (x_vel > 0) {
     let box = {
-      x: st.position.x + ob.width,
+      x: st.position.x + ob.width/2 + x_vel/2,
       y: st.position.y,
       width: x_vel,
       height: ob.height
@@ -91,7 +91,7 @@ export function velocity_collision_check(object:obj<unknown>,list:Array<obj<unkn
   }
   else if (x_vel < 0) {
     let box = {
-      x: x_vel + st.position.x,
+      x: x_vel/2 + st.position.x - ob.width/2,
       y: st.position.y,
       width: -1 * x_vel,
       height: ob.height
@@ -107,7 +107,7 @@ export function velocity_collision_check(object:obj<unknown>,list:Array<obj<unkn
   if (y_vel > 0) {
     let box = {
       x: st.position.x,
-      y: st.position.y + ob.height,
+      y: st.position.y + ob.height/2 + y_vel/2,
       width: ob.width,
       height: y_vel
     }
@@ -122,7 +122,7 @@ export function velocity_collision_check(object:obj<unknown>,list:Array<obj<unkn
   else if (y_vel < 0) {
     let box = {
       x: st.position.x,
-      y: y_vel + st.position.y,
+      y: y_vel/2 + st.position.y - ob.height/2,
       width: ob.width,
       height: -1 * y_vel
     }
