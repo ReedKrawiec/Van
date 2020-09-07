@@ -58,7 +58,12 @@ target.addEventListener("mousedown", (e) => {
         selected.function();
       }
       else if(selected.execute === exec_type.repeat){
-        active_binds.push(selected);
+        let active = {
+          bind:selected,
+          timer:0,
+          interval:selected.interval
+        }
+        active_binds.push(active);
       }
       selected.executed = true;
     }
@@ -76,7 +81,7 @@ target.addEventListener("mouseup", (e) => {
     else if(selected.type === btype.mouse && (selected.key === e.type || selected.key == "mousedown") && selected.executed && selected.execute === exec_type.repeat){
       let g = [...active_binds];
       for(let a = 0; a < g.length;a++){
-        if(g[a].id === selected.id){
+        if(g[a].bind.id === selected.id){
           selected.executed = false;
           active_binds.splice(a,1);
           break;
@@ -95,7 +100,12 @@ window.addEventListener("keydown", (e) => {
         selected.function();
       }
       else if(selected.execute === exec_type.repeat){
-        active_binds.push(selected);
+        let active = {
+          bind:selected,
+          timer:0,
+          interval:selected.interval
+        }
+        active_binds.push(active);
       }
       selected.executed = true;
     }
@@ -113,7 +123,7 @@ window.addEventListener("keyup", (e) => {
       else if(selected.execute === exec_type.repeat){
         let g = [...active_binds];
         for(let a = 0; a < g.length;a++){
-          if(g[a].id === selected.id){
+          if(g[a].bind.id === selected.id){
             selected.executed = false;
             active_binds.splice(a,1);
             break;
@@ -147,7 +157,14 @@ interface bind{
   function:control_func,
   execute:exec_type,
   obj?:obj<unknown>,
-  executed?:boolean
+  executed?:boolean,
+  interval?:number
+}
+
+interface repeat_bind{
+  bind:bind,
+  timer:number,
+  interval:number
 }
 
 let x = 0;
@@ -160,7 +177,7 @@ let bind_count = 0;
 
 let all_binds:Array<bind> = []
 
-let active_binds:Array<bind> = [];
+let active_binds:Array<repeat_bind> = [];
 
 export function Poll_Mouse():mousePos{
   let height = GetViewportDimensions().height;
@@ -178,10 +195,14 @@ export function Poll_Mouse():mousePos{
   })
 }
 
-export function ExecuteRepeatBinds(){
+export function ExecuteRepeatBinds(b:number){
   for(let a of active_binds){
-    if(a.execute === exec_type.repeat){
-      a.function();
+    if(a.bind.execute === exec_type.repeat && a.timer == 0){
+      a.bind.function();
+    }
+    a.timer += b;
+    if(a.timer > a.interval){
+      a.timer = 0; 
     }
   }
 }
@@ -202,7 +223,7 @@ export enum exec_type{
 }
 
 let id = 0;
-export function Bind(keyname:string,func:control_func,type:exec_type,object?:obj<unknown>):number{
+export function Bind(keyname:string,func:control_func,type:exec_type,interval:number,object?:obj<unknown>):number{
   if(keyname.slice(0,5) === "mouse"){
     all_binds.push({
       key:keyname,
@@ -211,7 +232,8 @@ export function Bind(keyname:string,func:control_func,type:exec_type,object?:obj
       function:func,
       obj:object,
       execute:type,
-      executed:false
+      executed:false,
+      interval
     })
   }
   else{
@@ -221,7 +243,8 @@ export function Bind(keyname:string,func:control_func,type:exec_type,object?:obj
       id,
       function:func,
       execute:type,
-      executed:false
+      executed:false,
+      interval
     })
   }
   id++;

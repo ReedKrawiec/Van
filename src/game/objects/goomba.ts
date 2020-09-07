@@ -1,7 +1,7 @@
 import {velocity,obj_state,state_func} from "../../lib/state";
 import {sprite,sprite_gen} from "../../lib/sprite";
-import {obj,rotation_velocity} from "../../lib/object";
-import {platformer_obj} from "./platformer_obj";
+import {obj,rotation_length} from "../../lib/object";
+import {platformer_obj,plat_state} from "./platformer_obj";
 import {Poll_Mouse, exec_type} from "../../lib/controls";
 import {collision_box} from "../../lib/collision";
 import {Bind} from "../../lib/controls";
@@ -14,10 +14,34 @@ enum direction{
   right
 }
 
-export interface goomba_state extends obj_state{
+export interface goomba_state extends obj_state,plat_state{
   direction: direction,
   velocity:velocity,
   jumping:boolean
+}
+
+export class Cursor extends platformer_obj<obj_state>{
+  sprite_url = "http://localhost/src/game/sprites/cursor.png";
+  height = 64;
+  width = 64;
+  collision = true;
+  render = true;
+  constructor(id:string){
+    super();
+    this.id = id;
+    this.state = {
+      position:{
+        x:0,
+        y:0
+      },
+      velocity:{
+        x:0,
+        y:0
+      }
+    }
+  }
+  statef(){
+  }
 }
 
 export class Goomba extends platformer_obj<goomba_state>{
@@ -40,7 +64,8 @@ export class Goomba extends platformer_obj<goomba_state>{
         x:0,
         y:0
       },
-      jumping:false
+      jumping:false,
+      health:100
     }
   }
   renderf(t:number):sprite{
@@ -84,10 +109,11 @@ export class Goomba extends platformer_obj<goomba_state>{
     if(jumping_check){
       this.state.jumping = false;
       let collider = bottom_collisions[0] as platformer_obj<obj_state>;
-      if(collider.enemy){
+      /*if(collider.enemy){
         this.state.velocity.y = 12;
         collider.delete();
       }
+      */
     }
     else{
       this.state.jumping = true;
@@ -112,8 +138,7 @@ export class StandingGoomba extends platformer_obj<goomba_state>{
   sprite_url = "http://localhost/src/game/objects/goomba.png";
   height = 64;
   width = 64;
-  collision = false;
-  render = false;
+  collision = true;
   enemy = true;
   constructor(x:number,y:number,id:string = undefined){
     super();
@@ -130,14 +155,9 @@ export class StandingGoomba extends platformer_obj<goomba_state>{
         x:0,
         y:0
       },
-      jumping:false
+      jumping:false,
+      health:100
     }
-  }
-  register_controls(){
-    this.bindControl("mouse1",exec_type.once,()=>{
-      this.state.jumping = !this.state.jumping;
-      this.gravity = !this.gravity;
-    })
   }
   statef(time:number){
     if(this.state.jumping){
@@ -183,6 +203,7 @@ export class StandingGoomba extends platformer_obj<goomba_state>{
         }
       }
     }
+    super.statef(time);
   }
 }
 

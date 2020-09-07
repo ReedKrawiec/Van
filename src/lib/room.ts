@@ -61,10 +61,10 @@ export class room<T>{
   registerHUD():HUD{
     return undefined;
   }
-  bindControl(key:string,x:exec_type,func:control_func){
-    Bind(key,func,x); 
+  bindControl(key:string,x:exec_type,func:control_func,interval:number = 1){
+    Bind(key,func,x,interval); 
   }
-  check_collisions(box:collision_box,exempt?:string):Array<obj<unknown>>{
+  check_collisions(box:collision_box,exempt?:Array<string>):Array<obj<unknown>>{
     if(DEBUG){
       render_collision_box(box);
     }

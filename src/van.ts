@@ -1,4 +1,4 @@
-export const DEBUG = true;
+export const DEBUG = false;
 
 import {obj} from "./lib/object";
 import {obj_state} from "./lib/state";
@@ -55,7 +55,7 @@ export const render_collision_box = (a:collision_box) => {
 
 let boxes:Array<collision_box> = [];
 
-let deep = (a:any) =>{
+export let deep = (a:any) =>{
   return JSON.parse(JSON.stringify(a));
 }
 
@@ -162,7 +162,7 @@ export class game{
       if(this.state.current_room.hud){
         this.state.current_room.hud.statef(new_time.getTime());
       }
-        ExecuteRepeatBinds();
+        ExecuteRepeatBinds(a);
     },a);
   }
   getRoom(){

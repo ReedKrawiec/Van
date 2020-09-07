@@ -1,5 +1,6 @@
 import {obj,getId} from "../lib/object";
 import {obj_state} from "../lib/state";
+import {deep} from "../van";
 
 export interface collision_box{
   x:number;
@@ -25,10 +26,10 @@ export function check_all_objects(c: collision_box,objs:Array<obj<unknown>>,exem
   return matched
 }
 
-export function check_all_collisions(c: collision_box,objs:Array<obj<unknown>>,exemption:string):Array<obj<unknown>>{
+export function check_all_collisions(c: collision_box,objs:Array<obj<unknown>>,exemption:string[]):Array<obj<unknown>>{
   let matched = [];
   for (let a of objs) {
-    if (a.id !== exemption && a.collision && a.collides_with_box(c)) {
+    if (exemption.indexOf(a.id) == -1 && a.collision && a.collides_with_box(c)) {
       matched.push(a);
     }
   }

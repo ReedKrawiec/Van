@@ -1,5 +1,5 @@
 import { room, apply_gravity } from "../../lib/room";
-import { StandingGoomba, Goomba, goomba_state } from "../objects/goomba";
+import { StandingGoomba, Goomba, goomba_state, Cursor } from "../objects/goomba";
 import { Box } from "../objects/box";
 import { velocity_collision_check } from "../../lib/collision";
 import { gravity_obj } from "../../lib/object";
@@ -48,8 +48,7 @@ class Overworld_HUD extends HUD {
 
 export class Overworld extends room<overworld_i>{
   background_url = "https://img.wallpapersafari.com/desktop/1920/1080/8/51/imD41l.jpg";
-  objects = [new Box(800, 0, "box"), new Box(600, 65, "box"), new Goomba(800, 800, "player"), new StandingGoomba(801, 900),new StandingGoomba(700, 900), new StandingGoomba(601, 900),new StandingGoomba(0, 0, "cursor")/*,new StandingGoomba(801,1000),new StandingGoomba(801,1100),new StandingGoomba(801,1200)*/]
-  //objects:Array<Box|Goomba> = [new Goomba(0,0,"player")]
+  objects = [new Cursor("cursor"),new Goomba(800, 800, "player"),new Box(800,0),new StandingGoomba(800,900)]
   constructor() {
     super();
     this.state = {
@@ -64,7 +63,7 @@ export class Overworld extends room<overworld_i>{
     this.bindControl("Escape", exec_type.once, () => {
       this.state.paused = !this.state.paused;
     })
-    this.bindControl("mouse1", exec_type.once,() => {
+    this.bindControl("mousedown", exec_type.repeat,() => {
       let player = this.getObj("player") as Goomba;
       let cursor = this.getObj("cursor");
       let position = {
@@ -73,7 +72,7 @@ export class Overworld extends room<overworld_i>{
       }
       let bullet = new Bullet(position,player.angleTowards(cursor));
       this.addItem(bullet);
-    })
+    },20)
   }
   statef(time: number) {
     if (!this.state.paused) {
@@ -83,11 +82,10 @@ export class Overworld extends room<overworld_i>{
         this.objects[a].statef(time);
       }
       let player = this.getObj("player") as Goomba;
-      let cursor = this.getObj("cursor") as Goomba;
+      let cursor = this.getObj("cursor") as Cursor;
       if (player) {
 
         let camera = getGame().state.camera;
-        //console.log(camera.state.dimensions.width);
         camera.x = player.state.position.x;
         camera.y = player.state.position.y;
       }

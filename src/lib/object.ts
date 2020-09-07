@@ -10,9 +10,9 @@ interface obj_i<T>{
   renderf:render_func
 }
 
-export function rotation_velocity(velocity:number,degree:number){
-  let a_len = velocity * Math.sin(degree * Math.PI/180);
-  let b_len = velocity * Math.cos(degree * Math.PI/180);
+export function rotation_length(length:number,degree:number){
+  let a_len = length * Math.sin(degree * Math.PI/180);
+  let b_len = length * Math.cos(degree * Math.PI/180);
   return {
     x:a_len,
     y:b_len
@@ -75,13 +75,13 @@ export class obj<T>{
     }
     return 0;
   }
-  bindControl(key:string,x:exec_type,func:control_func){
+  bindControl(key:string,x:exec_type,func:control_func,interval = 1){
     if(key == "mouse1"){
-      let b = Bind(key,func,x,this);
+      let b = Bind(key,func,x,interval,this);
       this.binds.push(b);
     }
     else{
-      this.binds.push(Bind(key,func,x)); 
+      this.binds.push(Bind(key,func,x,interval)); 
     }
   }
   register_controls(){
@@ -96,7 +96,7 @@ export class obj<T>{
   collision_check(a:collision_box):Array<obj<unknown>>{
     if(this.collision){
       let room = getGame().getRoom();
-      return room.check_collisions(a,this.id);
+      return room.check_collisions(a,[this.id]);
     }
     return [];
   }
@@ -129,24 +129,6 @@ export class obj<T>{
       vcollides = true;
     }
     if(box.bottom > ob.bottom && box.bottom < ob.top){
-      vcollides = true;
-    }
-    return hcollides && vcollides;
-  }
-  collides_with(a:obj<unknown>):boolean{
-    let st = this.state as unknown as obj_state;
-    let st_2 = a.state as obj_state;
-    let hcollides = false, vcollides = false;
-    if(st.position.x > st_2.position.x && st.position.x < (st_2.position.x + a.width)){
-      hcollides = true;
-    }
-    if(st_2.position.x > st.position.x && st_2.position.x < (st.position.x + a.width)){
-      hcollides = true;
-    }
-    if(st.position.y > st_2.position.y && st.position.y < (st_2.position.y + a.width)){
-      vcollides = true;
-    }
-    if(st_2.position.y > st.position.y && st_2.position.y < (st.position.y + a.width)){
       vcollides = true;
     }
     return hcollides && vcollides;
