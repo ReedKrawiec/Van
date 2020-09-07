@@ -74,6 +74,11 @@ export function velocity_collision_check(object:obj<unknown>,list:Array<obj<unkn
   let st = object.getState() as obj_state;
   let x_vel = st.velocity.x;
   let y_vel = st.velocity.y;
+  if(!ob.collision){
+    st.position.x += x_vel;
+    st.position.y += y_vel;
+    return;
+  }
   if (x_vel > 0) {
     let box = {
       x: st.position.x + ob.width/2 + x_vel/2,

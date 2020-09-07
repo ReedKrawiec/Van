@@ -10,6 +10,15 @@ interface obj_i<T>{
   renderf:render_func
 }
 
+export function rotation_velocity(velocity:number,degree:number){
+  let a_len = velocity * Math.sin(degree * Math.PI/180);
+  let b_len = velocity * Math.cos(degree * Math.PI/180);
+  return {
+    x:a_len,
+    y:b_len
+  }
+}
+
 export function getId(a:Array<obj<unknown>>,id:string):obj<unknown>{
   for(let b = 0;b < a.length; b++){
     if(a[b].id == id){
@@ -52,6 +61,19 @@ export class obj<T>{
         resolve();
       });
     })
+  }
+  angleTowards(a:obj<unknown>):number{
+    let b = a as obj<obj_state>;
+    let state = this.state as unknown as obj_state;
+    if(state.position.x < b.state.position.x && state.position.y > b.state.position.y  
+      || (state.position.x < b.state.position.x && state.position.y < b.state.position.y)){
+      return 90 - Math.atan((b.state.position.y - state.position.y) / (b.state.position.x - state.position.x)) * 180/Math.PI
+    }
+    if(state.position.x > b.state.position.x && state.position.y < b.state.position.y 
+      || state.position.x > b.state.position.x && state.position.y > b.state.position.y){
+      return 270 - Math.atan((b.state.position.y - state.position.y) / (b.state.position.x - state.position.x)) * 180/Math.PI
+    }
+    return 0;
   }
   bindControl(key:string,x:exec_type,func:control_func){
     if(key == "mouse1"){

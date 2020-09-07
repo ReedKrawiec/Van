@@ -60,7 +60,8 @@ interface rectangle{
 interface sprite_args{
   sprite:sprite,
   x:number,
-  y:number
+  y:number,
+  rotation:number
 }
 
 interface renderer_args{
@@ -88,17 +89,37 @@ export const sprite_renderer = (r:renderer_args,s:sprite_args) => {
   let final_y = ((vheight - s.y - camera.state.dimensions.height/2 - s.sprite.sprite_height/2 + camera.state.position.y) * r.camera.state.scaling);
   let height = s.sprite.sprite_height * r.camera.state.scaling;
   let width = s.sprite.sprite_width * r.camera.state.scaling;
-  r.context.drawImage(
-    s.sprite.sprite_sheet,
-    s.sprite.left,
-    s.sprite.top,
-    s.sprite.sprite_width,
-    s.sprite.sprite_height,
-    final_x,
-    final_y,
-    width,
-    height
-  )
+  if(s.rotation > 0){
+    r.context.save();
+    r.context.translate(final_x + s.sprite.sprite_width/2,final_y + s.sprite.sprite_height/2)
+    let radians = s.rotation * (Math.PI/180);
+    r.context.rotate(radians);
+    r.context.drawImage(
+      s.sprite.sprite_sheet,
+      s.sprite.left,
+      s.sprite.top,
+      s.sprite.sprite_width,
+      s.sprite.sprite_height,
+      -s.sprite.sprite_width/2,
+      -s.sprite.sprite_height/2,
+      width,
+      height
+    )
+    r.context.restore();
+  }
+  else{
+    r.context.drawImage(
+      s.sprite.sprite_sheet,
+      s.sprite.left,
+      s.sprite.top,
+      s.sprite.sprite_width,
+      s.sprite.sprite_height,
+      final_x,
+      final_y,
+      width,
+      height
+    )
+  }
 }
 
 export const rect_renderer = (context:CanvasRenderingContext2D,rect:rectangle,x:number,y:number,color:string,camera:Camera) => {

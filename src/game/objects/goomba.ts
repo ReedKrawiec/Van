@@ -1,6 +1,6 @@
 import {velocity,obj_state,state_func} from "../../lib/state";
 import {sprite,sprite_gen} from "../../lib/sprite";
-import {obj} from "../../lib/object";
+import {obj,rotation_velocity} from "../../lib/object";
 import {platformer_obj} from "./platformer_obj";
 import {Poll_Mouse, exec_type} from "../../lib/controls";
 import {collision_box} from "../../lib/collision";
@@ -17,7 +17,7 @@ enum direction{
 export interface goomba_state extends obj_state{
   direction: direction,
   velocity:velocity,
-  selected:boolean
+  jumping:boolean
 }
 
 export class Goomba extends platformer_obj<goomba_state>{
@@ -40,7 +40,7 @@ export class Goomba extends platformer_obj<goomba_state>{
         x:0,
         y:0
       },
-      selected:false
+      jumping:false
     }
   }
   renderf(t:number):sprite{
@@ -64,14 +64,16 @@ export class Goomba extends platformer_obj<goomba_state>{
         this.state.velocity.x = this.state.velocity.x + 0.5;
       }
     });
-    this.bindControl("KeyW",exec_type.once,()=>{
-      if(!this.state.selected){
+    this.bindControl("Space",exec_type.once,()=>{
+      if(!this.state.jumping){
         this.state.velocity.y += 15;
       }
     });
   }
   
   statef(time:number){
+    let cursor = getGame().getRoom().getObj("cursor");
+    this.rotation = this.angleTowards(cursor);
     let bottom_collisions = this.collision_check({
       x:this.state.position.x,
       y:this.state.position.y - 1 - this.height/2,
@@ -80,7 +82,7 @@ export class Goomba extends platformer_obj<goomba_state>{
     });
     let jumping_check = bottom_collisions.length > 0;
     if(jumping_check){
-      this.state.selected = false;
+      this.state.jumping = false;
       let collider = bottom_collisions[0] as platformer_obj<obj_state>;
       if(collider.enemy){
         this.state.velocity.y = 12;
@@ -88,17 +90,17 @@ export class Goomba extends platformer_obj<goomba_state>{
       }
     }
     else{
-      this.state.selected = true;
+      this.state.jumping = true;
       
     }
-    if(this.state.velocity.x > 0){
-      this.state.velocity.x = this.state.velocity.x - 0.1;
+    if(this.state.velocity.x > 0 ){
+      this.state.velocity.x = this.state.velocity.x - 0.2;
       if(this.state.velocity.x < 0){
         this.state.velocity.x = 0;
       }
     }
     else if(this.state.velocity.x < 0){
-      this.state.velocity.x = this.state.velocity.x + 0.1;
+      this.state.velocity.x = this.state.velocity.x + 0.2;
       if(this.state.velocity.x > 0){
         this.state.velocity.x = 0;
       }
@@ -110,7 +112,8 @@ export class StandingGoomba extends platformer_obj<goomba_state>{
   sprite_url = "http://localhost/src/game/objects/goomba.png";
   height = 64;
   width = 64;
-  collision = true;
+  collision = false;
+  render = false;
   enemy = true;
   constructor(x:number,y:number,id:string = undefined){
     super();
@@ -127,17 +130,17 @@ export class StandingGoomba extends platformer_obj<goomba_state>{
         x:0,
         y:0
       },
-      selected:false
+      jumping:false
     }
   }
   register_controls(){
     this.bindControl("mouse1",exec_type.once,()=>{
-      this.state.selected = !this.state.selected;
+      this.state.jumping = !this.state.jumping;
       this.gravity = !this.gravity;
     })
   }
   statef(time:number){
-    if(this.state.selected){
+    if(this.state.jumping){
       let mouse_position = Poll_Mouse();
       if(mouse_position.y > mouse_position.last.y){
         if(this.collision_check({

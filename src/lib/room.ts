@@ -7,12 +7,18 @@ import {Bind,control_func, exec_type} from "./controls";
 import { Overworld } from "../game/rooms/overworld";
 import {HUD} from "../lib/hud";
 
+interface position{
+  x:number,
+  y:number
+}
+
 export function apply_gravity(ob:gravity_obj<unknown>,grav_const:number, grav_max:number){
   let st = ob.state as obj_state;
   if(ob.gravity && st.velocity.y > grav_max){
     st.velocity.y += grav_const;
   }
 }
+
 export interface room_i<T>{
   background_url:string,
   objects:Array<obj<unknown>>
@@ -39,6 +45,10 @@ export class room<T>{
         resolve();
       });
     })
+  }
+  async addItem(o:obj<obj_state>){
+    await o.load();
+    this.objects.push(o);
   }
   deleteItem(id:string){
     for(let a = 0;a < this.objects.length;a++){
@@ -83,7 +93,7 @@ export class room<T>{
         return this.objects[a];
       }
     }
-    return false;
+    return null;
   }
   renderf(time: number): sprite {
     return {

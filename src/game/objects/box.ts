@@ -25,6 +25,7 @@ export class Box extends platformer_obj<obj_state>{
     }
     
   }
+  statef(){}
   register_controls(){
     this.bindControl("mouse1",exec_type.once,()=>{
       this.delete();

@@ -7,6 +7,7 @@ import { Poll_Mouse, exec_type } from "../../lib/controls";
 import { Door } from "../objects/room_loader";
 import { HUD, Text } from "../../lib/hud";
 import { getGame } from "../../van";
+import {Bullet} from "../objects/bullet";
 
 interface overworld_i {
   player: gravity_obj<unknown>,
@@ -24,31 +25,30 @@ class Overworld_HUD extends HUD {
       size: 44,
       font: "Alata",
       color: "white",
-      align:"left",
-      max_width:50
+      align:"left"
     }, () => {
       let x = getGame().getRoom().getObj("player") as Goomba;
-      return Math.round(x.state.position.x) + "";
+      return `X:${Math.round(x.state.position.x)}`;
     }));
     this.text_elements.push(new Text({
       position: {
-        x: 140,
-        y: 750
+        x: 10,
+        y: 790
       },
       size: 44,
       font: "Alata",
       color: "white",
-      max_width:50
+      align: "left"
     }, () => {
       let x = getGame().getRoom().getObj("player") as Goomba;
-      return Math.round(x.state.position.y) + "";
+      return `Y:${Math.round(x.state.position.y)}`;
     }));
   }
 }
 
 export class Overworld extends room<overworld_i>{
   background_url = "https://img.wallpapersafari.com/desktop/1920/1080/8/51/imD41l.jpg";
-  objects = [new Box(800, 0, "box"), new Box(600, 65, "box"), new Goomba(800, 800, "player"), new StandingGoomba(801, 900), new StandingGoomba(0, 0, "cursor"), new Box(0, 0)/*,new StandingGoomba(801,1000),new StandingGoomba(801,1100),new StandingGoomba(801,1200)*/]
+  objects = [new Box(800, 0, "box"), new Box(600, 65, "box"), new Goomba(800, 800, "player"), new StandingGoomba(801, 900),new StandingGoomba(700, 900), new StandingGoomba(601, 900),new StandingGoomba(0, 0, "cursor")/*,new StandingGoomba(801,1000),new StandingGoomba(801,1100),new StandingGoomba(801,1200)*/]
   //objects:Array<Box|Goomba> = [new Goomba(0,0,"player")]
   constructor() {
     super();
@@ -63,6 +63,16 @@ export class Overworld extends room<overworld_i>{
   register_controls() {
     this.bindControl("Escape", exec_type.once, () => {
       this.state.paused = !this.state.paused;
+    })
+    this.bindControl("mouse1", exec_type.once,() => {
+      let player = this.getObj("player") as Goomba;
+      let cursor = this.getObj("cursor");
+      let position = {
+        x:player.state.position.x,
+        y:player.state.position.y
+      }
+      let bullet = new Bullet(position,player.angleTowards(cursor));
+      this.addItem(bullet);
     })
   }
   statef(time: number) {
@@ -92,5 +102,3 @@ export class Overworld extends room<overworld_i>{
   }
 
 }
-
-//, new Box(0,0)

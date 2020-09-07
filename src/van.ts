@@ -105,7 +105,8 @@ export class game{
     sprite_renderer(render_args,{
       sprite:this.state.current_room.renderf(time),
       x:0,
-      y:0
+      y:0,
+      rotation:0
     });
     for (let a of camera_colliders){
       let st = a.state as obj_state;
@@ -113,7 +114,8 @@ export class game{
         sprite_renderer(render_args,{
           sprite:a.renderf(time),
           x:st.position.x,
-          y:st.position.y
+          y:st.position.y,
+          rotation:a.rotation
         });
       }
     }
@@ -135,7 +137,8 @@ export class game{
           sprite_renderer(render_args,{
             sprite:a.renderf(t),
             x:st.position.x,
-            y:st.position.y
+            y:st.position.y,
+            rotation:a.rotation
           });
         }
       }
