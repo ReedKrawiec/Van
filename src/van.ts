@@ -1,15 +1,17 @@
-export const DEBUG = false;
+export const DEBUG = true;
 
 import {obj} from "./lib/object";
 import {obj_state} from "./lib/state";
 import {room} from "./lib/room";
 import {sprite} from "./lib/sprite";
 import { collision_box } from "./lib/collision";
-import {sprite_renderer,rect_renderer, text_renderer, Camera} from "./lib/render";
+import {sprite_renderer,rect_renderer, stroked_rect_renderer, text_renderer, Camera} from "./lib/render";
 import {HUD} from "./lib/hud";
 import {ExecuteRepeatBinds} from "./lib/controls";
 
 import {Overworld} from "./game/rooms/overworld";
+
+import {Board} from "./van_chess/rooms/board";
 
 let canvas_element:HTMLCanvasElement = document.getElementById("target") as HTMLCanvasElement;
 let context:CanvasRenderingContext2D = canvas_element.getContext("2d");
@@ -126,7 +128,7 @@ export class game{
         width:box.width,
         height:box.height
       }
-      rect_renderer(context,rect,box.x,box.y,"#FF0000",this.state.camera);
+      stroked_rect_renderer(context,rect,box.x,box.y,"#FF0000",this.state.camera);
     }
     if(this.state.current_room.hud){
       let graphics = this.state.current_room.hud.graphic_elements;
@@ -158,9 +160,9 @@ export class game{
       let new_time = new Date();
       let time_since = new_time.getTime() - last_time.getTime();
       last_time = new_time;
-      this.state.current_room.statef(new_time.getTime());
+      this.state.current_room.statef(time_since);
       if(this.state.current_room.hud){
-        this.state.current_room.hud.statef(new_time.getTime());
+        this.state.current_room.hud.statef(time_since);
       }
         ExecuteRepeatBinds(a);
     },a);

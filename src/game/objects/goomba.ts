@@ -68,17 +68,20 @@ export class Goomba extends platformer_obj<goomba_state>{
       health:100
     }
   }
-  renderf(t:number):sprite{
-    let sprites:Array<sprite> = sprite_gen(this.sprite_sheet,this.width,this.height);
-    if(Math.floor(t/250) % 2 == 0){
-      return sprites[0];
-    }
-    else{
-      return sprites[1];
-    }
+  register_animations(){
+    let sprites = sprite_gen(this.sprite_sheet,this.width,this.height);
+    this.animations.add("walk1",[
+      [0,sprites[0][0]],
+      [1000,sprites[0][1]]
+    ],2000)
   }
-  
+  register_audio(){
+    this.audio.add("slime","http://localhost/src/game/sounds/goomba/slimeball.wav");
+  }
   register_controls(){
+    this.bindControl("mousedown",exec_type.repeat,()=>{
+      this.audio.play("slime",0.01)
+    },100)
     this.bindControl("KeyA",exec_type.repeat,()=>{
       if(this.state.velocity.x > -10){
         this.state.velocity.x = this.state.velocity.x - 0.5;
@@ -90,6 +93,8 @@ export class Goomba extends platformer_obj<goomba_state>{
       }
     });
     this.bindControl("Space",exec_type.once,()=>{
+      this.animations.play("walk1");
+      this.audio.play("slime",0.1);
       if(!this.state.jumping){
         this.state.velocity.y += 15;
       }
@@ -108,12 +113,6 @@ export class Goomba extends platformer_obj<goomba_state>{
     let jumping_check = bottom_collisions.length > 0;
     if(jumping_check){
       this.state.jumping = false;
-      let collider = bottom_collisions[0] as platformer_obj<obj_state>;
-      /*if(collider.enemy){
-        this.state.velocity.y = 12;
-        collider.delete();
-      }
-      */
     }
     else{
       this.state.jumping = true;

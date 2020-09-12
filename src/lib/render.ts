@@ -69,6 +69,13 @@ interface renderer_args{
   camera:Camera
 }
 
+export enum renderer{
+  text,
+  sprite,
+  rect,
+  stroke_rect
+}
+
 export const text_renderer = (r:renderer_args,s:TextSetting) => {
   let vheight = GetViewportDimensions().height;
   r.context.font = `${s.font.size}px ${s.font.font}`;
@@ -122,7 +129,7 @@ export const sprite_renderer = (r:renderer_args,s:sprite_args) => {
   }
 }
 
-export const rect_renderer = (context:CanvasRenderingContext2D,rect:rectangle,x:number,y:number,color:string,camera:Camera) => {
+export const stroked_rect_renderer = (context:CanvasRenderingContext2D,rect:rectangle,x:number,y:number,color:string,camera:Camera) => {
   let vheight = GetViewportDimensions().height;
   let final_x = ((x - camera.state.position.x + camera.state.dimensions.width/2 - rect.width/2) * camera.state.scaling);
   let final_y = ((vheight - y - rect.height/2 - camera.state.dimensions.height/2 + camera.state.position.y) * camera.state.scaling);
@@ -130,4 +137,14 @@ export const rect_renderer = (context:CanvasRenderingContext2D,rect:rectangle,x:
   let width = rect.width * camera.state.scaling;
   context.strokeStyle = color;
   context.strokeRect(final_x,final_y,rect.width,height);
+}
+
+export const rect_renderer = (context:CanvasRenderingContext2D,rect:rectangle,x:number,y:number,color:string,camera:Camera) => {
+  let vheight = GetViewportDimensions().height;
+  let final_x = ((x - camera.state.position.x + camera.state.dimensions.width/2 - rect.width/2) * camera.state.scaling);
+  let final_y = ((vheight - y - rect.height/2 - camera.state.dimensions.height/2 + camera.state.position.y) * camera.state.scaling);
+  let height = rect.height * camera.state.scaling;
+  let width = rect.width * camera.state.scaling;
+  context.fillStyle = color;
+  context.fillRect(final_x,final_y,rect.width,height);
 }

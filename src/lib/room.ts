@@ -5,7 +5,8 @@ import { velocity_collision_check,check_collisions,collision_box,check_all_colli
 import {render_collision_box,DEBUG} from "../van";
 import {Bind,control_func, exec_type} from "./controls";
 import { Overworld } from "../game/rooms/overworld";
-import {HUD} from "../lib/hud";
+import {HUD} from "./hud";
+import {audio} from "./audio"
 
 interface position{
   x:number,
@@ -29,7 +30,8 @@ export class room<T>{
   background: HTMLImageElement;
   objects: Array<obj<unknown>>
   state: T;
-  hud:HUD
+  hud:HUD;
+  audio = new audio();
   load() {
     let _this = this;
     return new Promise(async (resolve, reject) => {
@@ -40,8 +42,9 @@ export class room<T>{
       a.onerror = (() => {
         console.log("error loading url:" + this.background_url);
       })
-      a.onload = (() => {
+      a.onload = (async() => {
         _this.background = a;
+        await this.audio.load();
         resolve();
       });
     })

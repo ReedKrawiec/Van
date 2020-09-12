@@ -33,7 +33,7 @@ export class Bullet extends platformer_obj<bullet_state>{
         x:0,
         y:0
       },
-      speed:20,
+      speed:40,
       rotation:angle,
       distance:0,
       damage:5

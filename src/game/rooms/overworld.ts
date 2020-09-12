@@ -27,8 +27,10 @@ class Overworld_HUD extends HUD {
       color: "white",
       align:"left"
     }, () => {
-      let x = getGame().getRoom().getObj("player") as Goomba;
-      return `X:${Math.round(x.state.position.x)}`;
+      let x = getGame().getRoom().getObj("platform") as Box;
+      if(x)
+        return `Platform Health:${x.state.health}`;
+      return "0";
     }));
     this.text_elements.push(new Text({
       position: {
@@ -48,7 +50,7 @@ class Overworld_HUD extends HUD {
 
 export class Overworld extends room<overworld_i>{
   background_url = "https://img.wallpapersafari.com/desktop/1920/1080/8/51/imD41l.jpg";
-  objects = [new Cursor("cursor"),new Goomba(800, 800, "player"),new Box(800,0),new StandingGoomba(800,900)]
+  objects = [new Cursor("cursor"),new Goomba(800, 800, "player"),new Box(800,0,"platform"),new StandingGoomba(800,900,"enemy")]
   constructor() {
     super();
     this.state = {
@@ -72,7 +74,7 @@ export class Overworld extends room<overworld_i>{
       }
       let bullet = new Bullet(position,player.angleTowards(cursor));
       this.addItem(bullet);
-    },20)
+    },50)
   }
   statef(time: number) {
     if (!this.state.paused) {
