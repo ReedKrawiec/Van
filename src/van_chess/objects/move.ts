@@ -13,7 +13,7 @@ interface move_state{
 }
 
 export class move extends obj<move_state>{
-  sprite_url="http://localhost/src/van_chess/sprites/attacked.png";
+  sprite_url="./sprites/attacked.png";
   height = 100;
   width = 100;
   render = false;

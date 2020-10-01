@@ -3,7 +3,7 @@ import {getGame} from "../../van";
 import {Board} from "../rooms/board";
 
 export class Queen extends piece{
-  sprite_url = "http://localhost/src/van_chess/sprites/queen.png"
+  sprite_url = "./sprites/queen.png"
   constructor(pos:[number,number],side:side){
     super(pos,side,piece_type.queen);
   }

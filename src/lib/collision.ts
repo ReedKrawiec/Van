@@ -71,13 +71,19 @@ function velocity_max(velocity:number,box:collision_box,objs:Array<obj<unknown>>
 }
 
 export function velocity_collision_check(object:obj<unknown>,list:Array<obj<unknown>>) {
+  list = [...list];
   let ob = object;
-  let st = object.getState() as obj_state;
+  let st = object.state as obj_state;
   let x_vel = st.velocity.x;
   let y_vel = st.velocity.y;
   if(!ob.collision){
-    st.position.x += x_vel;
-    st.position.y += y_vel;
+    /*if(ob.id != "player" && ob.id != "platform" && ob.id != "cursor"){
+      console.log((<any>ob).tags);
+      console.log(ob.id);
+      console.log(st.velocity)
+    }*/
+    (<obj_state>ob.state).position.x += (<obj_state>ob.state).velocity.x;
+    (<obj_state>ob.state).position.y += (<obj_state>ob.state).velocity.y;
     return;
   }
   if (x_vel > 0) {

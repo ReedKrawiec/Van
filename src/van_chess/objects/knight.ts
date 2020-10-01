@@ -1,7 +1,7 @@
 import {piece,side,piece_type} from "./piece";
 
 export class Knight extends piece{
-  sprite_url = "http://localhost/src/van_chess/sprites/knight.png"
+  sprite_url = "./sprites/knight.png"
   constructor(pos:[number,number],side:side){
     super(pos,side,piece_type.knight);
   }

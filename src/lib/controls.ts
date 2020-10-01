@@ -50,6 +50,7 @@ target.addEventListener("click",(e)=>{
 })
 
 target.addEventListener("mousedown", (e) => {
+  e.preventDefault();
   let d = [...all_binds];
   for (let a = 0; a < all_binds.length; a++) {
     let selected = d[a];
@@ -58,12 +59,7 @@ target.addEventListener("mousedown", (e) => {
         selected.function();
       }
       else if(selected.execute === exec_type.repeat){
-        let active = {
-          bind:selected,
-          timer:0,
-          interval:selected.interval
-        }
-        active_binds.push(active);
+        selected.repeat_timer.active = true;
       }
       selected.executed = true;
     }
@@ -79,11 +75,11 @@ target.addEventListener("mouseup", (e) => {
       
     }
     else if(selected.type === btype.mouse && (selected.key === e.type || selected.key == "mousedown") && selected.executed && selected.execute === exec_type.repeat){
-      let g = [...active_binds];
+      let g = [...repeat_binds];
       for(let a = 0; a < g.length;a++){
         if(g[a].bind.id === selected.id){
           selected.executed = false;
-          active_binds.splice(a,1);
+          g[a].active = false;
           break;
         }
       }
@@ -100,12 +96,12 @@ window.addEventListener("keydown", (e) => {
         selected.function();
       }
       else if(selected.execute === exec_type.repeat){
-        let active = {
-          bind:selected,
-          timer:0,
-          interval:selected.interval
+        for(let c of repeat_binds){
+          if(c.bind.id == selected.id){
+            c.active = true;
+            break;
+          }
         }
-        active_binds.push(active);
       }
       selected.executed = true;
     }
@@ -121,11 +117,11 @@ window.addEventListener("keyup", (e) => {
         selected.executed = false;
       }
       else if(selected.execute === exec_type.repeat){
-        let g = [...active_binds];
+        let g = [...repeat_binds];
         for(let a = 0; a < g.length;a++){
           if(g[a].bind.id === selected.id){
             selected.executed = false;
-            active_binds.splice(a,1);
+            g[a].active = false;
             break;
           }
         }
@@ -156,6 +152,7 @@ interface bind{
   id:number,
   function:control_func,
   execute:exec_type,
+  repeat_timer?:repeat_bind,
   obj?:obj<unknown>,
   executed?:boolean,
   interval?:number
@@ -164,7 +161,8 @@ interface bind{
 interface repeat_bind{
   bind:bind,
   timer:number,
-  interval:number
+  interval:number,
+  active:boolean
 }
 
 let x = 0;
@@ -177,7 +175,7 @@ let bind_count = 0;
 
 let all_binds:Array<bind> = []
 
-let active_binds:Array<repeat_bind> = [];
+let repeat_binds:Array<repeat_bind> = [];
 
 export function Poll_Mouse():mousePos{
   let height = GetViewportDimensions().height;
@@ -196,11 +194,13 @@ export function Poll_Mouse():mousePos{
 }
 
 export function ExecuteRepeatBinds(b:number){
-  for(let a of active_binds){
-    if(a.bind.execute === exec_type.repeat && a.timer == 0){
+  for(let a of repeat_binds){
+    console.log(a);
+    if(a.bind.execute === exec_type.repeat && a.timer == 0 && a.active){
       a.bind.function();
     }
-    a.timer += b;
+    if(a.active || (!a.active && a.timer != 0))
+      a.timer += b;
     if(a.timer > a.interval){
       a.timer = 0; 
     }
@@ -225,7 +225,7 @@ export enum exec_type{
 let id = 0;
 export function Bind(keyname:string,func:control_func,type:exec_type,interval:number,object?:obj<unknown>):number{
   if(keyname.slice(0,5) === "mouse"){
-    all_binds.push({
+    let b:bind = {
       key:keyname,
       type:btype.mouse,
       id,
@@ -234,10 +234,21 @@ export function Bind(keyname:string,func:control_func,type:exec_type,interval:nu
       execute:type,
       executed:false,
       interval
-    })
+    };
+    if(type == exec_type.repeat){
+      b.repeat_timer = {
+        bind:b,
+        timer:0,
+        interval,
+        active:false
+      }
+      repeat_binds.push(b.repeat_timer);
+    }
+    all_binds.push(b);
+
   }
   else{
-    all_binds.push({
+    let b:bind = {
       key:keyname,
       type:btype.keyboard,
       id,
@@ -245,7 +256,17 @@ export function Bind(keyname:string,func:control_func,type:exec_type,interval:nu
       execute:type,
       executed:false,
       interval
-    })
+    }
+    if(type == exec_type.repeat){
+      b.repeat_timer = {
+        bind:b,
+        timer:0,
+        interval,
+        active:false
+      }
+      repeat_binds.push(b.repeat_timer);
+    }
+    all_binds.push(b);
   }
   id++;
   return id - 1;

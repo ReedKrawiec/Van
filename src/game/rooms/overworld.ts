@@ -1,13 +1,14 @@
 import { room, apply_gravity } from "../../lib/room";
-import { StandingGoomba, Goomba, goomba_state, Cursor } from "../objects/goomba";
+import { StandingGoomba,Gun, Goomba, goomba_state, Cursor } from "../objects/goomba";
 import { Box } from "../objects/box";
 import { velocity_collision_check } from "../../lib/collision";
-import { gravity_obj } from "../../lib/object";
+import { gravity_obj, rotation_length } from "../../lib/object";
 import { Poll_Mouse, exec_type } from "../../lib/controls";
 import { Door } from "../objects/room_loader";
 import { HUD, Text } from "../../lib/hud";
 import { getGame } from "../../van";
 import {Bullet} from "../objects/bullet";
+import {Target} from "../objects/target";
 
 interface overworld_i {
   player: gravity_obj<unknown>,
@@ -20,22 +21,20 @@ class Overworld_HUD extends HUD {
     this.text_elements.push(new Text({
       position: {
         x: 10,
-        y: 750
+        y: 710
       },
       size: 44,
       font: "Alata",
       color: "white",
       align:"left"
     }, () => {
-      let x = getGame().getRoom().getObj("platform") as Box;
-      if(x)
-        return `Platform Health:${x.state.health}`;
-      return "0";
+      let x = getGame().getRoom().getObj("player") as Goomba;
+      return `X:${Math.round(x.state.position.x)}`;
     }));
     this.text_elements.push(new Text({
       position: {
         x: 10,
-        y: 790
+        y: 750
       },
       size: 44,
       font: "Alata",
@@ -49,8 +48,8 @@ class Overworld_HUD extends HUD {
 }
 
 export class Overworld extends room<overworld_i>{
-  background_url = "https://img.wallpapersafari.com/desktop/1920/1080/8/51/imD41l.jpg";
-  objects = [new Cursor("cursor"),new Goomba(800, 800, "player"),new Box(800,0,"platform"),new StandingGoomba(800,900,"enemy")]
+  background_url = "./sprites/imD41l.jpg";
+  objects = [new Cursor("cursor"),new Goomba(800, 150, "player"),new Box(600,0,"platform"),new Gun(),new Target([200,100]),new Target([200,200]),new Target([1000,100]),new Target([1000,200])]
   constructor() {
     super();
     this.state = {
@@ -65,21 +64,27 @@ export class Overworld extends room<overworld_i>{
     this.bindControl("Escape", exec_type.once, () => {
       this.state.paused = !this.state.paused;
     })
+    
     this.bindControl("mousedown", exec_type.repeat,() => {
-      let player = this.getObj("player") as Goomba;
-      let cursor = this.getObj("cursor");
+      let gun = this.getObj("gun") as Gun;
+      let muzzle = rotation_length(40,gun.state.rotation);
       let position = {
-        x:player.state.position.x,
-        y:player.state.position.y
+        x:gun.state.position.x + muzzle.x,
+        y:gun.state.position.y + muzzle.y
       }
-      let bullet = new Bullet(position,player.angleTowards(cursor));
-      this.addItem(bullet);
-    },50)
+      let bullets = [];
+      for(let a = 0;a < 15;a++){
+        bullets.push(new Bullet([position.x,position.y],gun.state.rotation  + (a * 50/15) - 25));
+      }
+      this.addItems(bullets);
+      console.log(bullets);
+    },1000)
+    
   }
   statef(time: number) {
     if (!this.state.paused) {
       for (let a = 0; a < this.objects.length; a++) {
-        apply_gravity(this.objects[a], -.5, -15);
+        //apply_gravity(this.objects[a], -.5, -15);
         velocity_collision_check(this.objects[a], this.objects);
         this.objects[a].statef(time);
       }
@@ -91,6 +96,7 @@ export class Overworld extends room<overworld_i>{
         camera.x = player.state.position.x;
         camera.y = player.state.position.y;
       }
+      
       if (cursor) {
         cursor.collision = false;
         cursor.gravity = false;
@@ -98,6 +104,7 @@ export class Overworld extends room<overworld_i>{
         cursor.state.position.x = mouse.x;
         cursor.state.position.y = mouse.y;
       }
+      
     }
   }
 

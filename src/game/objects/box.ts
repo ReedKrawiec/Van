@@ -3,7 +3,7 @@ import {obj_state} from "../../lib/state";
 import { exec_type } from "../../lib/controls";
 
 export class Box extends platformer_obj<plat_state>{
-  sprite_url = "http://localhost/src/game/objects/box.png"
+  sprite_url = "./sprites/box.png"
   collision = true
   height = 64;
   width = 500;

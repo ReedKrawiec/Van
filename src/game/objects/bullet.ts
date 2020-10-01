@@ -17,23 +17,26 @@ interface position{
 }
 
 export class Bullet extends platformer_obj<bullet_state>{
-  sprite_url = "http://localhost/src/game/sprites/bullet.png"
-  collision = false
+  sprite_url = "./sprites/bullet.png";
   height = 20;
   width = 10;
   gravity = false;
-  constructor(x:position, angle:number, id:string = undefined){
+  tags = ["bullet"]
+  constructor(x:[number,number], angle:number, id:string = undefined){
     super();
     if(id != undefined){
       this.id = id;
     }
     this.state = {
-      position:x,
+      position:{
+        x:x[0],
+        y:x[1]
+      },
       velocity:{
         x:0,
         y:0
       },
-      speed:40,
+      speed:30,
       rotation:angle,
       distance:0,
       damage:5
@@ -43,7 +46,7 @@ export class Bullet extends platformer_obj<bullet_state>{
   statef(){
     this.state.velocity = rotation_length(this.state.speed,this.state.rotation);
     this.state.distance += this.state.speed;
-    if(this.state.distance > 2000){
+    if(this.state.distance > 1000){
       this.delete();
     }
     let room = getGame().state.current_room;
@@ -52,7 +55,7 @@ export class Bullet extends platformer_obj<bullet_state>{
       y:this.state.position.y,
       width:this.width,
       height:this.height
-    },["player","bullet"]);
+    },["player","gun"]);
     if(collisions.length > 0){
       for(let collision of collisions){
         let st = collision.state as unknown as plat_state;

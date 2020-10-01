@@ -21,3 +21,16 @@ export interface room_state{
   objects: Array<obj_state>
 }
 
+export function position_init():obj_state{
+  return {
+    position:{
+      x:0,
+      y:0
+    },
+    velocity:{
+      x:0,
+      y:0
+    }
+
+  }  
+}

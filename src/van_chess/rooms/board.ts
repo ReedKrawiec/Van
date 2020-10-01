@@ -30,7 +30,7 @@ export interface board_state{
   attacked:Array<[number,number]>
 }
 export class Board extends room<board_state>{
-  background_url="http://localhost/src/van_chess/rooms/board.png";
+  background_url="./sprites/board.png";
   objects:Array<obj<unknown>> = [];
   constructor(){
     super();
@@ -113,7 +113,7 @@ export class Board extends room<board_state>{
       this.clear_attacked_board(this.state.white_board);
       
       this.calculate_attacked_board(this.state.white_board,side.white);
-      console.log(this.state.white_board);
+
       
     }
     for(let x of this.state.pieces){

@@ -53,6 +53,10 @@ export class room<T>{
     await o.load();
     this.objects.push(o);
   }
+  async addItems(o:obj<obj_state>[]){
+    await Promise.all(o.map((a)=>a.load()));
+    this.objects.push(...o);
+  }
   deleteItem(id:string){
     for(let a = 0;a < this.objects.length;a++){
       if(this.objects[a].id === id){

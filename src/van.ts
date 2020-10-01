@@ -1,4 +1,4 @@
-export const DEBUG = true;
+export const DEBUG = false;
 
 import {obj} from "./lib/object";
 import {obj_state} from "./lib/state";
@@ -10,8 +10,6 @@ import {HUD} from "./lib/hud";
 import {ExecuteRepeatBinds} from "./lib/controls";
 
 import {Overworld} from "./game/rooms/overworld";
-
-import {Board} from "./van_chess/rooms/board";
 
 let canvas_element:HTMLCanvasElement = document.getElementById("target") as HTMLCanvasElement;
 let context:CanvasRenderingContext2D = canvas_element.getContext("2d");
