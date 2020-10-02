@@ -89,6 +89,7 @@ export class obj<T>{
   render = true;
   animations = new animations();
   audio = new audio();
+  last_render:number = 0;
   getState() {
     return this.state;
   }
@@ -175,19 +176,24 @@ export class obj<T>{
       bottom: (a.y - a.height / 2)
     }
 
-    if (ob.left >= box.left && ob.left < box.right) {
+    if ((ob.left >= box.left && ob.left < box.right) || (box.left > ob.left && box.left < ob.right)) {
       hcollides = true;
     }
-    if (box.left > ob.left && box.left < ob.right) {
-      hcollides = true;
+    else{
+      return false;
     }
-    if (ob.bottom >= box.bottom && ob.bottom < box.top) {
+    if ((ob.bottom >= box.bottom && ob.bottom < box.top) || (box.bottom > ob.bottom && box.bottom < ob.top)){
       vcollides = true;
     }
-    if (box.bottom > ob.bottom && box.bottom < ob.top) {
-      vcollides = true;
+    else{
+      return false;
     }
     return hcollides && vcollides;
+  }
+  render_track(time:number){
+    let rendered = this.renderf(time - this.last_render);
+    this.last_render = time;
+    return rendered;
   }
   renderf(time: number): sprite {
     if (!this.animations.current) {

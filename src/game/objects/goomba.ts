@@ -196,20 +196,7 @@ export class Goomba extends platformer_obj<goomba_state>{
   }
   statef(time:number){
     let cursor = getGame().getRoom().getObj("cursor");
-    let bottom_collisions = this.collision_check({
-      x:this.state.position.x,
-      y:this.state.position.y - 1 - this.height/2,
-      width:this.width,
-      height:1
-    });
-    let jumping_check = bottom_collisions.length > 0;
-    if(jumping_check){
-      this.state.jumping = false;
-    }
-    else{
-      this.state.jumping = true;
-      
-    }
+
     if(this.state.velocity.y > 0){
       this.state.velocity.y = this.state.velocity.y - 0.4;
       if(this.state.velocity.y < 0)

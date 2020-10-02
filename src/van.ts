@@ -63,7 +63,7 @@ interface game_state{
   logic:number,
   context:CanvasRenderingContext2D,
   current_room:room<unknown>,
-  camera:Camera,
+  cameras:Array<Camera>,
   canvas:HTMLCanvasElement,
   player_state:{
     power:number
@@ -73,84 +73,122 @@ interface game_state{
 export class game{
   state:game_state;
   context:CanvasRenderingContext2D;
+  offscreen_canvas:HTMLCanvasElement;
+  offscreen_context:CanvasRenderingContext2D;
   constructor(ctx:CanvasRenderingContext2D,a:room<unknown>){
     this.state = {
       canvas:canvas_element,
       logic:undefined,
       context:ctx,
-      camera:new Camera(0,0,vwidth,vheight,1,false),
+      cameras:[new Camera(0,0,vwidth/2,vheight,1,{
+        x:0,
+        y:0,
+        width:0.5,
+        height:0.5
+      }),
+      new Camera(0,100,vwidth/2,vheight/2,1,{
+        x:vwidth/2,
+        y:0,
+        width:0.5,
+        height:0.5
+      }),
+      new Camera(0,100,vwidth/2,vheight/2,1,{
+        x:vwidth/2,
+        y:vheight/2,
+        width:0.5,
+        height:0.5
+      })
+      ],
       current_room: undefined,
       player_state:{
         power:0
       }
     }
+    this.offscreen_canvas = document.createElement("canvas");
+    this.offscreen_context = this.offscreen_canvas.getContext("2d");
+    /*
+    let h = Math.max(...this.state.cameras.map(x=>x.state.dimensions.height));
+    let w = Math.max(...this.state.cameras.map(x=>x.state.dimensions.width))
+    this.offscreen_canvas.height = h;
+    this.offscreen_canvas.width = w;
+    */
     this.loadRoom(a);
   }
   render(t:number){
     let time = t - last_render_time
     last_render_time = t;
-    this.state.context.clearRect(0,0,vwidth,vheight);
-    this.state.context.fillStyle="black";
-    this.state.context.fillRect(0,0,vwidth,vheight);
-    let camera_colliders = this.state.current_room.check_objects({
-      x:this.state.camera.state.position.x,
-      y:this.state.camera.state.position.y,
-      width:this.state.camera.state.dimensions.width,
-      height:this.state.camera.state.dimensions.height
-    });
-    let render_args = {
-      context:this.state.context,
-      camera:this.state.camera,
-    };
-    sprite_renderer(render_args,{
-      sprite:this.state.current_room.renderf(time),
-      x:0,
-      y:0,
-      rotation:0
-    });
-    for (let a of camera_colliders){
-      let st = a.state as obj_state;
-      if(a.render){
-        sprite_renderer(render_args,{
-          sprite:a.renderf(time),
-          x:st.position.x,
-          y:st.position.y,
-          rotation:a.rotation
-        });
-      }
-    }
-    let box:collision_box;
-    while(boxes.length > 0){
-      let box = boxes.pop();
-      let rect = {
-        width:box.width,
-        height:box.height
-      }
-      stroked_rect_renderer(context,rect,box.x,box.y,"#FF0000",this.state.camera);
-    }
-    if(this.state.current_room.hud){
-      let graphics = this.state.current_room.hud.graphic_elements;
-      let text_elements = this.state.current_room.hud.text_elements;
-      for(let a of graphics){
+    for(let camera of this.state.cameras){
+      //this.offscreen_context.clearRect(0,0,camera.state.dimensions.width,camera.state.dimensions.height);
+      this.offscreen_context.fillStyle="black";
+      //this.offscreen_context.fillRect(0,0,camera.state.dimensions.width,camera.state.dimensions.height);
+      this.offscreen_canvas.height = camera.state.dimensions.height;
+      this.offscreen_canvas.width = camera.state.dimensions.width;
+      let camera_box = {
+        x:camera.state.position.x,
+        y:camera.state.position.y,
+        width:camera.state.dimensions.width,
+        height:camera.state.dimensions.height
+      };
+      let camera_colliders = this.state.current_room.check_objects(camera_box);
+      let render_args = {
+        context:this.offscreen_context,
+        camera:camera,
+      };
+      sprite_renderer(render_args,{
+        sprite:this.state.current_room.renderf(time),
+        x:camera.state.viewport.x,
+        y:camera.state.viewport.y,
+        rotation:0
+      });
+      for (let a of camera_colliders){
         let st = a.state as obj_state;
         if(a.render){
           sprite_renderer(render_args,{
-            sprite:a.renderf(t),
+            sprite:a.render_track(t),
             x:st.position.x,
             y:st.position.y,
             rotation:a.rotation
           });
         }
       }
-      for(let a of text_elements){
-        let st = a.state;
-        text_renderer(render_args,{
-          x:st.position.x,
-          y:st.position.y,
-          font:a.renderf(t)
-        })
+      let box:collision_box;
+      let boxes_copy = [...boxes]
+      while(boxes_copy.length > 0){
+        let box = boxes_copy.pop();
+        let rect = {
+          width:box.width,
+          height:box.height
+        }
+        stroked_rect_renderer(this.offscreen_context,rect,box.x,box.y,"#FF0000",camera);
       }
+      if(this.state.current_room.hud){
+        let graphics = this.state.current_room.hud.graphic_elements;
+        let text_elements = this.state.current_room.hud.text_elements;
+        for(let a of graphics){
+          let st = a.state as obj_state;
+          if(a.render){
+            sprite_renderer(render_args,{
+              sprite:a.renderf(t),
+              x:st.position.x,
+              y:st.position.y,
+              rotation:a.rotation
+            });
+          }
+        }
+        render_args.context = this.state.context;
+        for(let a of text_elements){
+          let st = a.state;
+          text_renderer(render_args,{
+            x:st.position.x,
+            y:st.position.y,
+            font:a.renderf(t)
+          })
+        }
+      }
+      let data = this.offscreen_context.getImageData(0,0,camera.state.dimensions.width,camera.state.dimensions.height);
+      this.state.context.putImageData(data,camera.state.viewport.x,camera.state.viewport.y);
     }
+    boxes = [];
     requestAnimationFrame((a)=>{this.render(a)}); 
   }
   start_logic(a:number){
@@ -186,7 +224,7 @@ export class game{
   }
 }
 
-let game_inst = new game(context,new Overworld());
+let game_inst = new game(context,new Overworld()  );
 
 export function getGame(){
   return game_inst;

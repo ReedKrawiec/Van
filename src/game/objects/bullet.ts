@@ -21,6 +21,7 @@ export class Bullet extends platformer_obj<bullet_state>{
   height = 20;
   width = 10;
   gravity = false;
+  max_distance = 2000;
   tags = ["bullet"]
   constructor(x:[number,number], angle:number, id:string = undefined){
     super();
@@ -36,7 +37,7 @@ export class Bullet extends platformer_obj<bullet_state>{
         x:0,
         y:0
       },
-      speed:30,
+      speed:10,
       rotation:angle,
       distance:0,
       damage:5
@@ -46,7 +47,7 @@ export class Bullet extends platformer_obj<bullet_state>{
   statef(){
     this.state.velocity = rotation_length(this.state.speed,this.state.rotation);
     this.state.distance += this.state.speed;
-    if(this.state.distance > 1000){
+    if(this.state.distance > this.max_distance){
       this.delete();
     }
     let room = getGame().state.current_room;
@@ -63,6 +64,7 @@ export class Bullet extends platformer_obj<bullet_state>{
           st.health -= this.state.damage;
         }
       }
+      this.state.distance = this.max_distance;
       this.delete();
     }
   }

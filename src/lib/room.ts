@@ -97,6 +97,7 @@ export class room<T>{
   getObj(id:string){
     for(let a = 0; a < this.objects.length; a++){
       if(this.objects[a].id == id){
+        
         return this.objects[a];
       }
     }

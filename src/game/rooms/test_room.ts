@@ -39,9 +39,6 @@ objects = [new Box(500,500,"box"),new Door([500,564],Overworld),new Goomba(800,1
     }
     let player = this.getObj("player") as Goomba;
     if(player){
-      let camera = getGame().state.camera;
-      camera.state.position.x = player.state.position.x - (camera.state.dimensions.width/2);
-      camera.state.position.y = player.state.position.y - 64;
     }
   }
 }

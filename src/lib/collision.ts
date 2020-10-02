@@ -77,11 +77,6 @@ export function velocity_collision_check(object:obj<unknown>,list:Array<obj<unkn
   let x_vel = st.velocity.x;
   let y_vel = st.velocity.y;
   if(!ob.collision){
-    /*if(ob.id != "player" && ob.id != "platform" && ob.id != "cursor"){
-      console.log((<any>ob).tags);
-      console.log(ob.id);
-      console.log(st.velocity)
-    }*/
     (<obj_state>ob.state).position.x += (<obj_state>ob.state).velocity.x;
     (<obj_state>ob.state).position.y += (<obj_state>ob.state).velocity.y;
     return;

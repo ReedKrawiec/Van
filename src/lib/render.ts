@@ -6,7 +6,6 @@ import {HudText,TextSetting} from "./hud";
 
 interface camera_state{
   scaling:number,
-  stretch:boolean,
   position:{
     x:number,
     y:number
@@ -14,15 +13,22 @@ interface camera_state{
   dimensions:{
     width:number,
     height:number
-  }
+  },
+  viewport:viewport
+}
+
+interface viewport{
+  x:number,
+  y:number,
+  width:number,
+  height:number
 }
 
 export class Camera{
   state:camera_state
-  constructor(x:number,y:number,width:number,height:number,scaling:number,stretch:boolean){
+  constructor(x:number,y:number,width:number,height:number,scaling:number,v:viewport){
     this.state = {
       scaling,
-      stretch,
       position:{
         x:x/scaling,
         y:y/scaling
@@ -30,7 +36,8 @@ export class Camera{
       dimensions:{
         width:width / scaling,
         height:height / scaling
-      }
+      },
+      viewport:v
     }
   }
   set x(x:number){
@@ -91,25 +98,37 @@ export const text_renderer = (r:renderer_args,s:TextSetting) => {
 
 export const sprite_renderer = (r:renderer_args,s:sprite_args) => {
   let camera = r.camera;
-  let vheight = GetViewportDimensions().height;
+  let vheight = r.camera.state.dimensions.height/ r.camera.state.scaling;
   let final_x = ((s.x - camera.state.position.x + camera.state.dimensions.width/2 - s.sprite.sprite_width/2) * r.camera.state.scaling);
   let final_y = ((vheight - s.y - camera.state.dimensions.height/2 - s.sprite.sprite_height/2 + camera.state.position.y) * r.camera.state.scaling);
   let height = s.sprite.sprite_height * r.camera.state.scaling;
   let width = s.sprite.sprite_width * r.camera.state.scaling;
-  if(s.rotation > 0){
+  let cut_off = 0;
+  /*if((s.x - s.sprite.sprite_width/2) < (r.camera.state.position.x - r.camera.state.dimensions.width/2)){
+    cut_off = (r.camera.state.position.x - r.camera.state.dimensions.width/2) - (s.x - s.sprite.sprite_width/2);
+  }
+  
+  else if((s.x + s.sprite.sprite_width/2) > (r.camera.state.position.x + r.camera.state.dimensions.width/2)){
+    cut_off =   (r.camera.state.position.x + r.camera.state.dimensions.width/2) - (s.x + s.sprite.sprite_width/2);
+  }
+  */
+  
+  if(true){
     r.context.save();
-    r.context.translate(final_x + s.sprite.sprite_width/2,final_y + s.sprite.sprite_height/2)
+    r.context.translate(final_x + cut_off + (s.sprite.sprite_width - cut_off)/2,final_y + s.sprite.sprite_height/2)
     let radians = s.rotation * (Math.PI/180);
     r.context.rotate(radians);
+    if(s.sprite.sprite_width == 149 && cut_off > 0)
+      console.log(cut_off);
     r.context.drawImage(
       s.sprite.sprite_sheet,
-      s.sprite.left,
+      s.sprite.left + cut_off,
       s.sprite.top,
-      s.sprite.sprite_width,
+      (s.sprite.sprite_width - cut_off),
       s.sprite.sprite_height,
-      -s.sprite.sprite_width/2,
+      -(s.sprite.sprite_width - cut_off)/2,
       -s.sprite.sprite_height/2,
-      width,
+      width - cut_off,
       height
     )
     r.context.restore();
@@ -130,7 +149,7 @@ export const sprite_renderer = (r:renderer_args,s:sprite_args) => {
 }
 
 export const stroked_rect_renderer = (context:CanvasRenderingContext2D,rect:rectangle,x:number,y:number,color:string,camera:Camera) => {
-  let vheight = GetViewportDimensions().height;
+  let vheight = camera.state.dimensions.height/camera.state.scaling;
   let final_x = ((x - camera.state.position.x + camera.state.dimensions.width/2 - rect.width/2) * camera.state.scaling);
   let final_y = ((vheight - y - rect.height/2 - camera.state.dimensions.height/2 + camera.state.position.y) * camera.state.scaling);
   let height = rect.height * camera.state.scaling;
@@ -140,11 +159,11 @@ export const stroked_rect_renderer = (context:CanvasRenderingContext2D,rect:rect
 }
 
 export const rect_renderer = (context:CanvasRenderingContext2D,rect:rectangle,x:number,y:number,color:string,camera:Camera) => {
-  let vheight = GetViewportDimensions().height;
+  let vheight = camera.state.dimensions.height/camera.state.scaling;
   let final_x = ((x - camera.state.position.x + camera.state.dimensions.width/2 - rect.width/2) * camera.state.scaling);
-  let final_y = ((vheight - y - rect.height/2 - camera.state.dimensions.height/2 + camera.state.position.y) * camera.state.scaling);
+  let final_y = ((vheight - y - rect.height/2 - camera.state.dimensions.height/2 + camera.state.position.y) * camera.state.scaling) ;
   let height = rect.height * camera.state.scaling;
   let width = rect.width * camera.state.scaling;
-  context.fillStyle = color;
+  context.strokeStyle = color;
   context.fillRect(final_x,final_y,rect.width,height);
 }

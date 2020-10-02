@@ -182,7 +182,7 @@ export function Poll_Mouse():mousePos{
   let canvas = getGame().state.canvas;
   let wratio = parseFloat(window.getComputedStyle(canvas).width)/GetViewportDimensions().width;
   let vratio = parseFloat(window.getComputedStyle(canvas).height)/GetViewportDimensions().height;
-  let camera = getGame().state.camera;
+  let camera = getGame().state.cameras[0];
   return ({
     x: (x/wratio/camera.state.scaling + camera.state.position.x - camera.state.dimensions.width/2) ,
     y: ((height - y/vratio)/camera.state.scaling + camera.state.position.y - camera.state.dimensions.height/2),
@@ -195,7 +195,6 @@ export function Poll_Mouse():mousePos{
 
 export function ExecuteRepeatBinds(b:number){
   for(let a of repeat_binds){
-    console.log(a);
     if(a.bind.execute === exec_type.repeat && a.timer == 0 && a.active){
       a.bind.function();
     }
