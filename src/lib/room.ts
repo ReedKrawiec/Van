@@ -1,5 +1,5 @@
 import { gravity_obj,obj } from "./object";
-import { sprite } from "./sprite";
+import { Particle, sprite } from "./sprite";
 import { obj_state } from "./state";
 import { velocity_collision_check,check_collisions,collision_box,check_all_collisions,check_all_objects} from "./collision";
 import {render_collision_box,DEBUG} from "../van";
@@ -20,6 +20,16 @@ export function apply_gravity(ob:gravity_obj<unknown>,grav_const:number, grav_ma
   }
 }
 
+export interface particle_entry{
+  sprite:string,
+  height:number,
+  width:number
+}
+
+interface particles{
+  [index:string]:particle_entry
+}
+
 export interface room_i<T>{
   background_url:string,
   objects:Array<obj<unknown>>
@@ -28,7 +38,9 @@ export interface room_i<T>{
 export class room<T>{
   background_url: string;
   background: HTMLImageElement;
-  objects: Array<obj<unknown>>
+  objects: Array<obj<unknown>> = [];
+  particles:particles = {};
+  particles_arr: Array<obj<unknown>> = [];
   state: T;
   hud:HUD;
   audio = new audio();
@@ -49,21 +61,24 @@ export class room<T>{
       });
     })
   }
-  async addItem(o:obj<obj_state>){
+  async addItem(o:obj<obj_state>, list = this.objects){
     await o.load();
-    this.objects.push(o);
+    list.push(o);
   }
-  async addItems(o:obj<obj_state>[]){
+  async addItems(o:obj<obj_state>[], list = this.objects){
     await Promise.all(o.map((a)=>a.load()));
-    this.objects.push(...o);
+    list.push(...o);
   }
-  deleteItem(id:string){
-    for(let a = 0;a < this.objects.length;a++){
-      if(this.objects[a].id === id){
-        this.objects = this.objects.slice(0,a).concat(this.objects.slice(a+1));
+  deleteItem(id:string, list = this.objects){
+    for(let a = 0;a < list.length;a++){
+      if(list[a].id === id){
+        list.splice(a,1)
         a--;
       }
     }
+  }
+  registerParticles(){
+
   }
   registerHUD():HUD{
     return undefined;
@@ -77,11 +92,11 @@ export class room<T>{
     }
     return check_all_collisions(box,this.objects,exempt);
   }
-  check_objects(box:collision_box,exempt?:string){
+  check_objects(box:collision_box,exempt?:string[],list=this.objects){
     if(DEBUG){
       render_collision_box(box);
     }
-    return check_all_objects(box,this.objects,exempt);
+    return check_all_objects(box,list,exempt);
   }
   register_controls(){
 
@@ -93,6 +108,9 @@ export class room<T>{
     for (let a = 0; a < this.objects.length; a++) {
       this.objects[a].statef(time);
     }
+  }
+  emit_particle(name:string,pos:position,lifetime:number,pos_range:number){
+    this.addItem(new Particle(this.particles[name],pos,lifetime,pos_range), this.particles_arr);
   }
   getObj(id:string){
     for(let a = 0; a < this.objects.length; a++){
@@ -109,7 +127,8 @@ export class room<T>{
       left: 0,
       top: 0,
       sprite_height: this.background.height,
-      sprite_width: this.background.width
+      sprite_width: this.background.width,
+      opacity:1
     }
   }
 }

@@ -1,5 +1,5 @@
 import {obj} from "../../lib/object";
-import {sprite,sprite_gen} from "../../lib/sprite";
+import {positioned_sprite, sprite,sprite_gen} from "../../lib/sprite";
 import {board_state, Board} from "../rooms/board";
 import {getGame} from "../../van";
 import { Unbind, exec_type } from "../../lib/controls";
@@ -56,13 +56,21 @@ export class piece extends obj<piece_state>{
   getAttacking():Array<[number,number]>{
     return [];
   }
-  renderf(t:number){
+  renderf(t:number):positioned_sprite{
     let sprites = sprite_gen(this.sprite_sheet,this.width,this.height);
     if(this.state.side === side.white){
-      return sprites[0][0];
+      return {
+        sprite:sprites[0][0],
+        x:this.state.position.x,
+        y:this.state.position.y
+      };
     }
     else{
-      return sprites[0][1];
+      return {
+        sprite:sprites[0][1],
+        x:this.state.position.x,
+        y:this.state.position.y
+      };
     }
   }
   attackDiagonal(){
@@ -163,7 +171,7 @@ export class piece extends obj<piece_state>{
     }
   }
   bind_controls(){
-    this.bindControl("mouse1",exec_type.once,()=>{
+    this.bind_control("mouse1",exec_type.once,()=>{
       let room = getGame().state.current_room as Board;
       if(room.state.turn === this.state.side){
         room.state.selected = this;

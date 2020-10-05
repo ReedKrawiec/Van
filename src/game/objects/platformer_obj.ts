@@ -1,4 +1,4 @@
-import {gravity_obj} from "../../lib/object";
+import {composite_obj, gravity_obj} from "../../lib/object";
 import {obj_state} from "../../lib/state";
 
 export interface plat_state extends obj_state{
@@ -6,6 +6,19 @@ export interface plat_state extends obj_state{
 }
 
 export class platformer_obj<t> extends gravity_obj<t>{
+  enemy = false;
+  constructor(){
+    super();
+  }
+  statef(a:number){
+    let state = this.state as unknown as plat_state;
+    if(state.health <= 0){
+      this.delete();
+    }
+  }
+}
+
+export class platformer_obj_composite<t> extends composite_obj<t>{
   enemy = false;
   constructor(){
     super();

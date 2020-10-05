@@ -1,7 +1,7 @@
 import {velocity,obj_state,position_init,state_func} from "../../lib/state";
 import {sprite,sprite_gen} from "../../lib/sprite";
-import {obj,rotation_length} from "../../lib/object";
-import {platformer_obj,plat_state} from "./platformer_obj";
+import {obj,rotation_length, composite_obj} from "../../lib/object";
+import {platformer_obj,platformer_obj_composite,plat_state} from "./platformer_obj";
 import {Poll_Mouse, exec_type} from "../../lib/controls";
 import {collision_box} from "../../lib/collision";
 import {Bind} from "../../lib/controls";
@@ -24,14 +24,54 @@ interface gun_state extends obj_state{
   rotation:number  
 }
 
+export class BigStanding extends composite_obj<goomba_state>{
+  collision = true;
+  enemy = true;
+  gracity = true;
+  constructor(a:[number,number]){
+    super();
+    this.state = {
+      health:100,
+      direction:direction.left,
+      jumping:false,
+      position:{
+        x:a[0],
+        y:a[1]
+      },
+      velocity:{
+        x:0,
+        y:0
+      }
+    }
+    this.statics.push({
+      x:0,
+      y:0,
+      obj:new StandingGoomba(0,0)
+    })
+    this.statics.push({
+      x:250,
+      y:0,
+      obj:new StandingGoomba(0,0)
+    })
+  }
+  statef(t:number){
+    super.statef(t);
+    this.state.velocity.y = 3;
+    if(this.state.health <= 0){
+      this.delete();
+    }
+  }
+}
+
 export class Gun extends platformer_obj<gun_state>{
   sprite_url = "./sprites/folder/gun.png";
   height = 50;
   width = 20;
-  collision = true;
+  collision = false;
   render = true;
   player:Goomba;
   cursor:Cursor;
+  tags = ["gun"]
   constructor(){
     super();
     this.id = "gun";
@@ -48,7 +88,7 @@ export class Gun extends platformer_obj<gun_state>{
       this.cursor = <Cursor>room.getObj("cursor");
     }
     let angle = this.player.angleTowards(this.cursor);
-    let rot = rotation_length(140,angle);
+    let rot = rotation_length(50,angle);
     this.rotation = angle;
     this.state.rotation = angle;
     this.state.position = {
@@ -86,6 +126,7 @@ export class Goomba extends platformer_obj<goomba_state>{
   sprite_url = "./sprites/folder/robot.png";
   height = 149;
   width = 149;
+  tags = ["player"]
   collision = true;
   constructor(x:number,y:number,id:string = undefined){
     super();
@@ -132,57 +173,59 @@ export class Goomba extends platformer_obj<goomba_state>{
     this.audio.add("slime","./sounds/goomba/slimeball.wav");
   }
   register_controls(){
-    this.bindControl("KeyA",exec_type.repeat,()=>{
+    this.bind_control("KeyA",exec_type.repeat,()=>{
       if(this.state.velocity.x > -10){
         this.state.velocity.x = this.state.velocity.x - 1;
       }
     });
-    this.bindControl("KeyW",exec_type.once,()=>{
+    this.bind_control("KeyW",exec_type.once,()=>{
       if(this.state.direction == direction.left){
         this.animations.play("walk1");
       }
       else
         this.animations.play("walk2");
-      this.state.velocity.y = this.state.velocity.y + 0.1;
+      this.state.velocity.y = this.state.velocity.y + 0.2;
     })
-    this.bindControl("KeyW",exec_type.repeat,()=>{
+    /*this.bind_control("KeyW",exec_type.repeat,()=>{
       if(this.state.velocity.y < 10){
         this.state.velocity.y = this.state.velocity.y + 1;
       }
-    });
-    this.bindControl("KeyS",exec_type.once,()=>{
+    });*/
+    this.bind_control("KeyS",exec_type.once,()=>{
       if(this.state.direction == direction.left)
         this.animations.play("walk1");
       else
         this.animations.play("walk2");
       this.state.velocity.y = this.state.velocity.y - 0.1;
     })
-    this.bindControl("KeyS",exec_type.repeat,()=>{
+    /*
+    this.bind_control("KeyS",exec_type.repeat,()=>{
       if(this.state.velocity.y > -10){
         this.state.velocity.y = this.state.velocity.y - 1;
       }
     });
-    this.bindControl("KeyA",exec_type.once,()=>{
+    */
+    this.bind_control("KeyA",exec_type.once,()=>{
       this.animations.play("walk1");
       this.state.direction = direction.left;
       this.state.velocity.x = this.state.velocity.x - 0.1;
     })
-    this.bindControl("mousedown",exec_type.repeat, ()=>{
+    this.bind_control("mousedown",exec_type.repeat, ()=>{
       this.audio.play("slime",0.01);
-    },1000);
-    this.bindControl("KeyD",exec_type.repeat,()=>{
+    },600);
+    this.bind_control("KeyD",exec_type.repeat,()=>{
       if(this.state.velocity.x < 10){
         this.state.velocity.x = this.state.velocity.x + 1;
       }
     });
-    this.bindControl("KeyD",exec_type.once,()=>{
+    this.bind_control("KeyD",exec_type.once,()=>{
       this.animations.play("walk2");
       this.state.direction = direction.right;
       this.state.velocity.x = this.state.velocity.x + 0.1;
     })
-    this.bindControl("Space",exec_type.once,()=>{
+    this.bind_control("Space",exec_type.once,()=>{
       if(!this.state.jumping){
-        this.state.velocity.y += 15;
+        this.state.velocity.y += 25;
         this.audio.play("slime",0.1);
       }
     });
@@ -195,26 +238,38 @@ export class Goomba extends platformer_obj<goomba_state>{
     return super.renderf(t);
   }
   statef(time:number){
-    let cursor = getGame().getRoom().getObj("cursor");
-
+    let room = getGame().getRoom();
+    let cursor = room.getObj("cursor");
+    
+    if(room.check_collisions({
+      width:this.width,
+      height:1,
+      x:this.state.position.x,
+      y:this.state.position.y - this.height/2 - 1,
+    }).length > 0){
+      this.state.jumping = false;
+    }
+    else{
+      this.state.jumping = true;
+    }
     if(this.state.velocity.y > 0){
-      this.state.velocity.y = this.state.velocity.y - 0.4;
+      this.state.velocity.y = this.state.velocity.y - 0.4 * 16 / time;;
       if(this.state.velocity.y < 0)
         this.state.velocity.y = 0;
     }
     if(this.state.velocity.y < 0){
-      this.state.velocity.y = this.state.velocity.y + 0.4;
+      this.state.velocity.y = this.state.velocity.y + 0.4 * 16 / time;
       if(this.state.velocity.y > 0)
         this.state.velocity.y = 0;
     }
     if(this.state.velocity.x > 0 ){
-      this.state.velocity.x = this.state.velocity.x - 0.4;
+      this.state.velocity.x = this.state.velocity.x - 0.4 * 16 / time;;
       if(this.state.velocity.x < 0){
         this.state.velocity.x = 0;
       }
     }
     else if(this.state.velocity.x < 0){
-      this.state.velocity.x = this.state.velocity.x + 0.4;
+      this.state.velocity.x = this.state.velocity.x + 0.4 * 16 / time;;
       if(this.state.velocity.x > 0){
         this.state.velocity.x = 0;
       }

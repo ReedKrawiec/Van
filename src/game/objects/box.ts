@@ -9,6 +9,7 @@ export class Box extends platformer_obj<plat_state>{
   width = 500;
   gravity = false;
   enemy = true;
+  tags = ["static"]
   constructor(x:number, y:number, id:string = undefined){
     super();
     if(id != undefined){

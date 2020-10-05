@@ -1,5 +1,5 @@
 import { room, apply_gravity } from "../../lib/room";
-import { StandingGoomba,Gun, Goomba, goomba_state, Cursor } from "../objects/goomba";
+import { StandingGoomba,Gun, Goomba,BigStanding, goomba_state, Cursor } from "../objects/goomba";
 import { Box } from "../objects/box";
 import { velocity_collision_check } from "../../lib/collision";
 import { gravity_obj, rotation_length } from "../../lib/object";
@@ -7,8 +7,10 @@ import { Poll_Mouse, exec_type } from "../../lib/controls";
 import { Door } from "../objects/room_loader";
 import { HUD, Text } from "../../lib/hud";
 import { getGame } from "../../van";
-import {Bullet} from "../objects/bullet";
+import {Bullet, Rocket} from "../objects/bullet";
 import {Target} from "../objects/target";
+
+import {Board} from "../../van_chess/rooms/board";
 
 interface overworld_i {
   player: gravity_obj<unknown>,
@@ -19,6 +21,7 @@ interface overworld_i {
 class Overworld_HUD extends HUD {
   constructor() {
     super();
+    
     this.text_elements.push(new Text({
       position: {
         x: 10,
@@ -45,6 +48,7 @@ class Overworld_HUD extends HUD {
       let x = getGame().getRoom().getObj("player") as Goomba;
       return `Y:${Math.round(x.state.position.y)}`;
     }));
+    
   }
 }
 
@@ -64,25 +68,27 @@ export class Overworld extends room<overworld_i>{
   }
   register_controls() {
     this.bindControl("Escape", exec_type.once, () => {
-      getGame().loadRoom(new Overworld());
+      getGame().loadRoom(new Board());
     })
     
     this.bindControl("mousedown", exec_type.repeat,() => {
       let gun = this.getObj("gun") as Gun;
-      let muzzle = rotation_length(40,gun.state.rotation);
-      let position = {
-        x:gun.state.position.x + muzzle.x,
-        y:gun.state.position.y + muzzle.y
+      if(gun){
+        let muzzle = rotation_length(40,gun.state.rotation);
+        let position = {
+          x:gun.state.position.x + muzzle.x,
+          y:gun.state.position.y + muzzle.y
+        }
+        let bullets = [];
+        for(let a = 0;a < 1;a ++){
+          bullets.push(new Rocket([position.x,position.y],gun.state.rotation));
+        }
+        
+        if(this.state.locked_bullet == null)
+          this.state.locked_bullet = bullets[0];
+        this.addItems(bullets);
       }
-      let bullets = [];
-      for(let a = 0;a < 1;a++){
-        bullets.push(new Bullet([position.x,position.y],gun.state.rotation)); //+ (a * 50/15) - 25));
-      }
-      if(this.state.locked_bullet == null){
-        this.state.locked_bullet = bullets[0];
-      }
-      this.addItems(bullets);
-    },1000)
+    },400)
     let camera3 = getGame().state.cameras[1];
     this.bindControl("ArrowLeft",exec_type.repeat, () => {
       camera3.state.position.x -= 10;
@@ -97,20 +103,34 @@ export class Overworld extends room<overworld_i>{
       camera3.state.position.y += 10;
     },10)
   }
+  registerParticles(){
+    this.particles["smoke"] = {
+      sprite:"./sprites/folder/smoke.png",
+      height:64,
+      width:64
+    };
+    this.particles["explosion"] = {
+      sprite:"./sprites/folder/explosion.png",
+      height:64,
+      width:64
+    }
+  }
   statef(time: number) {
     if (!this.state.paused) {
       for (let a = 0; a < this.objects.length; a++) {
-        //apply_gravity(this.objects[a], -.5, -15);
+        apply_gravity(this.objects[a], -1, -15);
         velocity_collision_check(this.objects[a], this.objects);
         this.objects[a].statef(time);
+      }
+      for(let particle of this.particles_arr){
+        particle.statef(time);
       }
       let player = this.getObj("player") as Goomba;
       let cursor = this.getObj("cursor") as Cursor;
       let cameras = getGame().state.cameras;
-      let room = getGame().getRoom();
       if (player) {        
         cameras[0].x = player.state.position.x;
-        cameras[0].y = player.state.position.y + (cameras[0].state.dimensions.height/2 - player.height/2 - 100);        
+        cameras[0].y = player.state.position.y /*+ (cameras[0].state.dimensions.height/2 - player.height/2 - 100);     */   
       }
       if(this.state.locked_bullet != null){
         let bullet = this.state.locked_bullet;

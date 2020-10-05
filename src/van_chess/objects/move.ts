@@ -32,7 +32,7 @@ export class move extends obj<move_state>{
     return [x,y];
   }
   register_controls(){
-    this.bindControl("mouse1",exec_type.once,()=>{
+    this.bind_control("mouse1",exec_type.once,()=>{
       if(this.render){
         let room = getGame().state.current_room as Board;
         let p = room.get_piece(this.getCords()) as piece[];

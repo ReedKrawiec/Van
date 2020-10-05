@@ -3,13 +3,14 @@ export const DEBUG = false;
 import {obj} from "./lib/object";
 import {obj_state} from "./lib/state";
 import {room} from "./lib/room";
-import {sprite} from "./lib/sprite";
+import {positioned_sprite, sprite} from "./lib/sprite";
 import { collision_box } from "./lib/collision";
 import {sprite_renderer,rect_renderer, stroked_rect_renderer, text_renderer, Camera} from "./lib/render";
 import {HUD} from "./lib/hud";
 import {ExecuteRepeatBinds} from "./lib/controls";
 
 import {Overworld} from "./game/rooms/overworld";
+
 
 let canvas_element:HTMLCanvasElement = document.getElementById("target") as HTMLCanvasElement;
 let context:CanvasRenderingContext2D = canvas_element.getContext("2d");
@@ -106,71 +107,90 @@ export class game{
     }
     this.offscreen_canvas = document.createElement("canvas");
     this.offscreen_context = this.offscreen_canvas.getContext("2d");
-    /*
-    let h = Math.max(...this.state.cameras.map(x=>x.state.dimensions.height));
-    let w = Math.max(...this.state.cameras.map(x=>x.state.dimensions.width))
-    this.offscreen_canvas.height = h;
-    this.offscreen_canvas.width = w;
-    */
     this.loadRoom(a);
   }
   render(t:number){
     let time = t - last_render_time
     last_render_time = t;
     for(let camera of this.state.cameras){
-      //this.offscreen_context.clearRect(0,0,camera.state.dimensions.width,camera.state.dimensions.height);
-      this.offscreen_context.fillStyle="black";
-      //this.offscreen_context.fillRect(0,0,camera.state.dimensions.width,camera.state.dimensions.height);
+      
       this.offscreen_canvas.height = camera.state.dimensions.height;
       this.offscreen_canvas.width = camera.state.dimensions.width;
+      this.offscreen_context.clearRect(0,0,camera.state.dimensions.width,camera.state.dimensions.height);
+      this.offscreen_context.fillStyle="black";
+      this.offscreen_context.fillRect(0,0,camera.state.dimensions.width,camera.state.dimensions.height);
       let camera_box = {
         x:camera.state.position.x,
         y:camera.state.position.y,
         width:camera.state.dimensions.width,
         height:camera.state.dimensions.height
       };
-      let camera_colliders = this.state.current_room.check_objects(camera_box);
+      let particle_collides = this.state.current_room.check_objects(camera_box,[],this.state.current_room.particles_arr);
+      let camera_colliders = [...this.state.current_room.check_objects(camera_box),...particle_collides];
       let render_args = {
         context:this.offscreen_context,
         camera:camera,
       };
       sprite_renderer(render_args,{
         sprite:this.state.current_room.renderf(time),
-        x:camera.state.viewport.x,
-        y:camera.state.viewport.y,
-        rotation:0
+        x: 0,
+        y: 0,
+        rotation: 0
       });
-      for (let a of camera_colliders){
-        let st = a.state as obj_state;
-        if(a.render){
-          sprite_renderer(render_args,{
-            sprite:a.render_track(t),
-            x:st.position.x,
-            y:st.position.y,
-            rotation:a.rotation
+      for (let a of camera_colliders.filter((b) => b.render)) {
+        let rendered = a.render_track(t);
+        if (Array.isArray(rendered)) {
+          for (let positioned_sprite of rendered)
+            sprite_renderer(render_args, {
+              sprite:positioned_sprite.sprite,
+              x: positioned_sprite.x,
+              y: positioned_sprite.y,
+              rotation: a.rotation
+            });
+        }
+        else {
+          let positioned_sprite = rendered as positioned_sprite;
+          sprite_renderer(render_args, {
+            sprite: positioned_sprite.sprite,
+            x: positioned_sprite.x,
+            y: positioned_sprite.y,
+            rotation: a.rotation
           });
         }
       }
-      let box:collision_box;
-      let boxes_copy = [...boxes]
-      while(boxes_copy.length > 0){
-        let box = boxes_copy.pop();
-        let rect = {
-          width:box.width,
-          height:box.height
+      if (DEBUG) {
+        let box: collision_box;
+        let boxes_copy = [...boxes]
+        while(boxes_copy.length > 0){
+          let box = boxes_copy.pop();
+          let rect = {
+            width:box.width,
+            height:box.height
+          }
+          stroked_rect_renderer(this.offscreen_context,rect,box.x,box.y,"#FF0000",camera);
         }
-        stroked_rect_renderer(this.offscreen_context,rect,box.x,box.y,"#FF0000",camera);
       }
       if(this.state.current_room.hud){
         let graphics = this.state.current_room.hud.graphic_elements;
         let text_elements = this.state.current_room.hud.text_elements;
         for(let a of graphics){
-          let st = a.state as obj_state;
-          if(a.render){
+          let rendered = a.render_track(t);
+          if(Array.isArray(rendered) && a.render){
+            for(let positioned_sprite of rendered){
+              sprite_renderer(render_args,{
+                sprite:positioned_sprite.sprite,
+                x:positioned_sprite.x,
+                y:positioned_sprite.y,
+                rotation:a.rotation
+              });
+            }
+          }
+          else if(a.render){
+            let pos = (<positioned_sprite>rendered);
             sprite_renderer(render_args,{
-              sprite:a.renderf(t),
-              x:st.position.x,
-              y:st.position.y,
+              sprite:pos.sprite,
+              x:pos.x,
+              y:pos.y,
               rotation:a.rotation
             });
           }
@@ -185,10 +205,10 @@ export class game{
           })
         }
       }
-      let data = this.offscreen_context.getImageData(0,0,camera.state.dimensions.width,camera.state.dimensions.height);
-      this.state.context.putImageData(data,camera.state.viewport.x,camera.state.viewport.y);
+      this.state.context.drawImage(this.offscreen_canvas,camera.state.viewport.x,camera.state.viewport.y);
     }
-    boxes = [];
+    if(DEBUG)
+      boxes = [];
     requestAnimationFrame((a)=>{this.render(a)}); 
   }
   start_logic(a:number){
@@ -215,6 +235,7 @@ export class game{
     }
     let new_room = await x.load();
     x.register_controls();
+    x.registerParticles();
     this.state.current_room = x;
     if(this.state.logic != undefined){
       clearInterval(this.state.logic);

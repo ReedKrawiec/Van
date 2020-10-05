@@ -16,20 +16,14 @@ enum direction{
   down
 }
 
-export function check_all_objects(c: collision_box,objs:Array<obj<unknown>>,exemption:string):Array<obj<unknown>>{
-  let matched = [];
-  for (let a of objs) {
-    if (a.id !== exemption && a.collides_with_box(c)) {
-      matched.push(a);
-    }
-  }
-  return matched
+export function check_all_objects(c: collision_box,objs:Array<obj<unknown>>,exemption:string[] = []):Array<obj<unknown>>{
+  return objs.filter((a)=>(!exemption.some((b)=>a.tags.indexOf(b) !== -1) && a.collides_with_box(c)));
 }
 
 export function check_all_collisions(c: collision_box,objs:Array<obj<unknown>>,exemption:string[] = []):Array<obj<unknown>>{
   let matched = [];
   for (let a of objs) {
-    if (exemption.indexOf(a.id) == -1 && a.collision && a.collides_with_box(c)) {
+    if (!exemption.some((b)=>a.tags.indexOf(b) !== -1) && a.collision && a.collides_with_box(c)) {
       matched.push(a);
     }
   }

@@ -46,7 +46,7 @@ export class Door extends gravity_obj<loader_state>{
     getGame().loadRoom(this.create_room());
   }
   register_controls(){
-    this.bindControl("mouse1",exec_type.once, ()=>{
+    this.bind_control("mouse1",exec_type.once, ()=>{
       this.transport()
     })
   }

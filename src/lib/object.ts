@@ -1,6 +1,6 @@
-import { state_func, obj_state } from "./state";
+import { state_func, obj_state, position } from "./state";
 import { render_func } from "./render";
-import { sprite, sprite_gen } from "./sprite";
+import { Particle, positioned_sprite, sprite, sprite_gen } from "./sprite";
 import { collision_box } from "./collision";
 import { getGame } from "../van";
 import { Unbind, Bind, control_func, exec_type } from "./controls";
@@ -85,6 +85,7 @@ export class obj<T>{
   collision_box: collision_box
   id: string;
   binds: Array<number>;
+  tags:string[] = [];
   rotation: number = 0;
   render = true;
   animations = new animations();
@@ -119,6 +120,11 @@ export class obj<T>{
       });
     })
   }
+  distance(a:obj<unknown>):number{
+    let o_st = a.state as unknown as obj_state;
+    let st = this.state as unknown as obj_state;
+    return Math.sqrt(Math.pow(st.position.x - o_st.position.x,2) + Math.pow(st.position.y - o_st.position.y,2));
+  }
   angleTowards(a: obj<unknown>): number {
     let b = a as obj<obj_state>;
     let state = this.state as unknown as obj_state;
@@ -132,7 +138,7 @@ export class obj<T>{
     }
     return 0;
   }
-  bindControl(key: string, x: exec_type, func: control_func, interval = 1) {
+  bind_control(key: string, x: exec_type, func: control_func, interval = 1) {
     if (key == "mouse1") {
       let b = Bind(key, func, x, interval, this);
       this.binds.push(b);
@@ -190,14 +196,23 @@ export class obj<T>{
     }
     return hcollides && vcollides;
   }
+  emit_particle(name:string,offset:position,lifetime:number,range:number){
+    let room = getGame().getRoom();
+    let st = this.state as unknown as obj_state;
+    let final_position:position = {
+      x:st.position.x + offset.x,
+      y:st.position.y + offset.y
+    }
+    room.emit_particle(name,final_position,lifetime,range)
+  }
   render_track(time:number){
     let rendered = this.renderf(time - this.last_render);
     this.last_render = time;
     return rendered;
   }
-  renderf(time: number): sprite {
+  renderf(time: number): positioned_sprite | positioned_sprite[] {
+    let st = this.state as unknown as obj_state;
     if (!this.animations.current) {
-      let st = this.state as unknown as obj_state;
       let sprite_height = this.height;
       let sprite_width = this.width;
       if (this.height == undefined) {
@@ -207,16 +222,94 @@ export class obj<T>{
         sprite_width = this.sprite_sheet.width;
       }
       return {
-        sprite_sheet: this.sprite_sheet,
-        left: 0,
-        top: 0,
-        sprite_width,
-        sprite_height
+        sprite: {
+          sprite_sheet: this.sprite_sheet,
+          left: 0,
+          top: 0,
+          sprite_width,
+          sprite_height,
+          opacity:1
+        },
+        x: st.position.x,
+        y: st.position.y
       };
     }
-    return this.animations.renderf(time);
+    return {
+      sprite:this.animations.renderf(time),
+      x: st.position.x,
+      y: st.position.y
+    };
   }
 }
+
+interface composite_static{
+  x:number,
+  y:number,
+  obj:obj<unknown>
+}
+
+export class composite_obj<T> extends obj<T>{
+  objects:obj<unknown>[] = [];
+  statics:composite_static[] = [];
+  load(){
+    return Promise.all([...this.objects.map((a)=>a.load()),...this.statics.map(a=>a.obj.load())]);
+  }
+  renderf(time:number):positioned_sprite[]{
+    let arr:positioned_sprite[] = [];
+    for(let obj of this.objects){
+      let rendered = obj.render_track(time);
+      if(Array.isArray(rendered)){
+        arr.push(...rendered);
+      }
+      else{
+        arr.push(rendered);
+      }
+    }
+    for(let o of this.statics){
+      let rendered = o.obj.render_track(time);
+      if(Array.isArray(rendered)){
+        arr.push(...rendered);
+      }
+      else{
+        arr.push(rendered);
+      }
+    }
+    return arr;
+  }
+  delete(){
+    for(let a of this.objects){
+      a.delete();
+    }
+    for(let a of this.statics){
+      a.obj.delete();
+    }
+    super.delete();
+  }
+  statef(time:number){
+    for(let obj of this.objects){
+      obj.statef(time);
+    }
+    for(let a of this.statics){
+      a.obj.statef(time);
+      let obj_st = a.obj.state as obj_state;
+      let st = this.state as unknown as obj_state;
+      obj_st.position.x = st.position.x + a.x;
+      obj_st.position.y = st.position.y + a.y;
+    }
+  }
+  collides_with_box(a: collision_box):boolean{
+    for(let obj of this.objects){
+      if(obj.collides_with_box(a))
+        return true;
+    }
+    for(let o of this.statics){
+      if(o.obj.collides_with_box(a))
+        return true;
+    }
+    return false;
+  }  
+}
+
 
 export class static_obj {
   sprite_url = "";

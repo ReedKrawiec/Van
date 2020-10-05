@@ -12,6 +12,11 @@ export interface position{
   y:number;
 }
 
+export interface dimensions{
+  height:number,
+  width:number
+}
+
 export interface obj_state{
   position:position;
   velocity:velocity;
