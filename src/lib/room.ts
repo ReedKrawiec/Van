@@ -121,6 +121,9 @@ export class room<T>{
     }
     return null;
   }
+  getObjByTag(tag:string){
+    return this.objects.filter((a)=>a.tags.indexOf(tag) > -1);
+  }
   renderf(time: number): sprite {
     return {
       sprite_sheet: this.background,

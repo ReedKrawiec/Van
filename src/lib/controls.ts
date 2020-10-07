@@ -54,7 +54,7 @@ target.addEventListener("mousedown", (e) => {
   let d = [...all_binds];
   for (let a = 0; a < all_binds.length; a++) {
     let selected = d[a];
-    if (selected.type === btype.mouse && selected.key === e.type  && !selected.executed) {
+    if (selected.type === btype.mouse && selected.key === ("mouse" + e.button + "down")  && !selected.executed) {
       if(selected.execute === exec_type.once){
         selected.function();
       }
@@ -74,7 +74,7 @@ target.addEventListener("mouseup", (e) => {
        selected.executed = false;
       
     }
-    else if(selected.type === btype.mouse && (selected.key === e.type || selected.key == "mousedown") && selected.executed && selected.execute === exec_type.repeat){
+    else if(selected.type === btype.mouse && (selected.key === ("mouse" + e.button + "down") || selected.key == "mousedown") && selected.executed && selected.execute === exec_type.repeat){
       let g = [...repeat_binds];
       for(let a = 0; a < g.length;a++){
         if(g[a].bind.id === selected.id){

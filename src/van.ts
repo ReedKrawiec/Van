@@ -1,4 +1,4 @@
-export const DEBUG = false;
+export let DEBUG = false;
 
 import {obj} from "./lib/object";
 import {obj_state} from "./lib/state";
@@ -48,6 +48,10 @@ export function GetViewportDimensions ():dimensions{
     height:vheight,
     width:vwidth
   })
+}
+
+export function setDebug(x:boolean){
+  DEBUG = x;
 }
 
 export const render_collision_box = (a:collision_box) => {
@@ -137,6 +141,7 @@ export class game{
         y: 0,
         rotation: 0
       });
+      let hitboxes:collision_box[] = [];
       for (let a of camera_colliders.filter((b) => b.render)) {
         let rendered = a.render_track(t);
         if (Array.isArray(rendered)) {
@@ -157,6 +162,9 @@ export class game{
             rotation: a.rotation
           });
         }
+        if(DEBUG && a.collision){
+          hitboxes.push(a.create_collision_box());
+        }
       }
       if (DEBUG) {
         let box: collision_box;
@@ -168,6 +176,14 @@ export class game{
             height:box.height
           }
           stroked_rect_renderer(this.offscreen_context,rect,box.x,box.y,"#FF0000",camera);
+        }
+        while(hitboxes.length > 0){
+          let box = hitboxes.pop();
+          let rect = {
+            width:box.width,
+            height:box.height
+          }
+          stroked_rect_renderer(this.offscreen_context,rect,box.x,box.y,"#008000",camera);
         }
       }
       if(this.state.current_room.hud){

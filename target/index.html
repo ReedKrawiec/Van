@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="shortcut icon" href="#">
   <title>Van</title>
   <link href="https://fonts.googleapis.com/css2?family=Alata&display=swap" rel="stylesheet">
   <style>
@@ -20,6 +21,7 @@
     }
     canvas{
       outline:40px solid lightcoral;
+      cursor:none;
     }
     p{
       width: 880px;
@@ -31,8 +33,9 @@
       margin-bottom:40px;
     }
     .stretch{
-      width:100vw;
+      width:auto;
       height:100vh;
+      max-height: 1000px; 
     }
     
     
@@ -42,7 +45,7 @@
 </head>
 <body>
   <!--<p>Basic 2D Demo</p>-->
-  <canvas height="1000" width="1600" id="target" class="" ></canvas>
+  <canvas height="1000" width="1600" id="target" class="stretch" ></canvas>
 </body>
  <script type="module" src="./van.js"></script>
 </html>

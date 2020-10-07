@@ -28,3 +28,8 @@ export class Box extends platformer_obj<plat_state>{
     }
   }
 }
+export class VertBox extends Box{
+  sprite_url = "./sprites/box2.png";
+  width = 64;
+  height = 500;
+}

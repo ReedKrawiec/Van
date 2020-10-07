@@ -44,6 +44,7 @@ class animations {
   animation_tracker = 0;
   current: string;
   callback: void_func;
+  animating:boolean = false;
   add(name: string, s: Array<[number, sprite]>, length: number) {
     this.animations[name] = [s, length];
   }
@@ -59,12 +60,14 @@ class animations {
     for (index = 0; index < curr_animation.length - 1; index++) {
       if (this.animation_tracker >= curr_animation[index][0] && this.animation_tracker < curr_animation[index + 1][0]) {
         this.animation_tracker = this.animation_tracker + t;
+        this.animating = true;
         return curr_animation[index][1];
       }
     }
     if (this.callback) {
       this.callback();
     }
+    this.animating = false;
     if (this.animation_tracker >= length) {
       this.animation_tracker = 0;
     }
@@ -75,6 +78,13 @@ class animations {
   }
 }
 
+interface hitbox{
+  width:number,
+  height:number,
+  x_offset:number,
+  y_offset:number
+}
+
 export class obj<T>{
   sprite_url = "";
   sprite_sheet: HTMLImageElement;
@@ -82,7 +92,7 @@ export class obj<T>{
   height: number;
   width: number;
   collision: boolean = false;
-  collision_box: collision_box
+  hitbox: hitbox
   id: string;
   binds: Array<number>;
   tags:string[] = [];
@@ -91,6 +101,7 @@ export class obj<T>{
   animations = new animations();
   audio = new audio();
   last_render:number = 0;
+  
   getState() {
     return this.state;
   }
@@ -165,14 +176,42 @@ export class obj<T>{
   }
   statef(time: number) {
   }
+  create_collision_box():collision_box{
+    let st = this.state as unknown as obj_state;
+    if(this.hitbox){
+      return {
+        x:st.position.x,
+        y:st.position.y,
+        width:this.hitbox.width,
+        height:this.hitbox.height
+      }
+    }
+    else{
+      return {
+        x:st.position.x,
+        y:st.position.y,
+        width:this.width,
+        height:this.height
+      }
+    }
+  }
   collides_with_box(a: collision_box): boolean {
     let st = this.state as unknown as obj_state;
     let hcollides = false, vcollides = false;
+    let hbox = this.hitbox;
+    if(!this.hitbox){
+      hbox = {
+        x_offset:0,
+        y_offset:0,
+        width:this.width,
+        height:this.height
+      }
+    }
     let ob = {
-      left: (st.position.x - this.width / 2),
-      right: (st.position.x + this.width / 2),
-      top: (st.position.y + this.height / 2),
-      bottom: (st.position.y - this.height / 2)
+      left: (st.position.x + hbox.x_offset - hbox.width / 2),
+      right: (st.position.x + hbox.x_offset + hbox.width / 2),
+      top: (st.position.y + hbox.y_offset + hbox.height / 2),
+      bottom: (st.position.y + hbox.y_offset - hbox.height / 2)
     }
 
     let box = {

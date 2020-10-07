@@ -17,32 +17,22 @@ enum direction{
 export interface goomba_state extends obj_state,plat_state{
   direction: direction,
   velocity:velocity,
-  jumping:boolean
+  jumping:boolean,
+  times_airshot:number,
+  max_times_airshot:number
 }
 
 interface gun_state extends obj_state{
   rotation:number  
 }
 
-export class BigStanding extends composite_obj<goomba_state>{
+export class BigStanding extends composite_obj<{}>{
   collision = true;
   enemy = true;
   gracity = true;
   constructor(a:[number,number]){
     super();
-    this.state = {
-      health:100,
-      direction:direction.left,
-      jumping:false,
-      position:{
-        x:a[0],
-        y:a[1]
-      },
-      velocity:{
-        x:0,
-        y:0
-      }
-    }
+
     this.statics.push({
       x:0,
       y:0,
@@ -55,11 +45,7 @@ export class BigStanding extends composite_obj<goomba_state>{
     })
   }
   statef(t:number){
-    super.statef(t);
-    this.state.velocity.y = 3;
-    if(this.state.health <= 0){
-      this.delete();
-    }
+
   }
 }
 
@@ -126,7 +112,7 @@ export class Goomba extends platformer_obj<goomba_state>{
   sprite_url = "./sprites/folder/robot.png";
   height = 149;
   width = 149;
-  tags = ["player"]
+  tags = ["dummy"]
   collision = true;
   constructor(x:number,y:number,id:string = undefined){
     super();
@@ -144,7 +130,9 @@ export class Goomba extends platformer_obj<goomba_state>{
         y:0
       },
       jumping:false,
-      health:100
+      health:100,
+      times_airshot:0,
+      max_times_airshot:0
     }
     this.animations.play("walk1");
   }
@@ -168,71 +156,28 @@ export class Goomba extends platformer_obj<goomba_state>{
     this.animations.add('idleright',[
       [0,sprites[0][5]] 
     ],1);
+    this.animations.add('fallleft',[
+      [0,sprites[0][6]]
+    ],1);
+    this.animations.add('fallright',[
+      [0,sprites[0][7]]
+    ],1)
   }
   register_audio(){
     this.audio.add("slime","./sounds/goomba/slimeball.wav");
-  }
-  register_controls(){
-    this.bind_control("KeyA",exec_type.repeat,()=>{
-      if(this.state.velocity.x > -10){
-        this.state.velocity.x = this.state.velocity.x - 1;
-      }
-    });
-    this.bind_control("KeyW",exec_type.once,()=>{
-      if(this.state.direction == direction.left){
-        this.animations.play("walk1");
-      }
-      else
-        this.animations.play("walk2");
-      this.state.velocity.y = this.state.velocity.y + 0.2;
-    })
-    /*this.bind_control("KeyW",exec_type.repeat,()=>{
-      if(this.state.velocity.y < 10){
-        this.state.velocity.y = this.state.velocity.y + 1;
-      }
-    });*/
-    this.bind_control("KeyS",exec_type.once,()=>{
-      if(this.state.direction == direction.left)
-        this.animations.play("walk1");
-      else
-        this.animations.play("walk2");
-      this.state.velocity.y = this.state.velocity.y - 0.1;
-    })
-    /*
-    this.bind_control("KeyS",exec_type.repeat,()=>{
-      if(this.state.velocity.y > -10){
-        this.state.velocity.y = this.state.velocity.y - 1;
-      }
-    });
-    */
-    this.bind_control("KeyA",exec_type.once,()=>{
-      this.animations.play("walk1");
-      this.state.direction = direction.left;
-      this.state.velocity.x = this.state.velocity.x - 0.1;
-    })
-    this.bind_control("mousedown",exec_type.repeat, ()=>{
-      this.audio.play("slime",0.01);
-    },600);
-    this.bind_control("KeyD",exec_type.repeat,()=>{
-      if(this.state.velocity.x < 10){
-        this.state.velocity.x = this.state.velocity.x + 1;
-      }
-    });
-    this.bind_control("KeyD",exec_type.once,()=>{
-      this.animations.play("walk2");
-      this.state.direction = direction.right;
-      this.state.velocity.x = this.state.velocity.x + 0.1;
-    })
-    this.bind_control("Space",exec_type.once,()=>{
-      if(!this.state.jumping){
-        this.state.velocity.y += 25;
-        this.audio.play("slime",0.1);
-      }
-    });
+    this.audio.add("explosion","./sounds/explosion.mp3")
   }
   renderf(t:number){
-    if(this.state.velocity.x == 0 && this.state.velocity.y == 0){
+    if(this.state.jumping){
+      let animation = this.state.direction==direction.left ? "fallleft" : "fallright";
+      this.animations.play(animation);
+    }
+    else if(this.state.velocity.x == 0 && this.state.velocity.y == 0){
       let animation = this.state.direction==direction.left ? "idleleft" : "idleright";
+      this.animations.play(animation);
+    }
+    else if(!this.animations.animating){
+      let animation = this.state.direction==direction.left ? "walk1" : "walk2";
       this.animations.play(animation);
     }
     return super.renderf(t);
@@ -248,12 +193,14 @@ export class Goomba extends platformer_obj<goomba_state>{
       y:this.state.position.y - this.height/2 - 1,
     }).length > 0){
       this.state.jumping = false;
+      this.state.max_times_airshot = Math.max(this.state.times_airshot,this.state.max_times_airshot);
+      this.state.times_airshot = 0;
     }
     else{
       this.state.jumping = true;
     }
     if(this.state.velocity.y > 0){
-      this.state.velocity.y = this.state.velocity.y - 0.4 * 16 / time;;
+      this.state.velocity.y = this.state.velocity.y - 0.4 * 16 / time;
       if(this.state.velocity.y < 0)
         this.state.velocity.y = 0;
     }
@@ -263,17 +210,52 @@ export class Goomba extends platformer_obj<goomba_state>{
         this.state.velocity.y = 0;
     }
     if(this.state.velocity.x > 0 ){
+      this.state.direction = direction.right;
       this.state.velocity.x = this.state.velocity.x - 0.4 * 16 / time;;
       if(this.state.velocity.x < 0){
         this.state.velocity.x = 0;
       }
     }
     else if(this.state.velocity.x < 0){
+      this.state.direction = direction.left;
       this.state.velocity.x = this.state.velocity.x + 0.4 * 16 / time;;
       if(this.state.velocity.x > 0){
         this.state.velocity.x = 0;
       }
     }
+  }
+}
+
+export class ControlledPlayer extends Goomba{
+  tags = ["player"]
+  register_controls(){
+    this.bind_control("KeyA",exec_type.repeat,()=>{
+      if(this.state.velocity.x > -10){
+        this.state.velocity.x = this.state.velocity.x - 1;
+      }
+    });
+    this.bind_control("KeyA",exec_type.once,()=>{
+      this.state.direction = direction.left;
+      this.state.velocity.x = this.state.velocity.x - 0.1;
+    })
+    this.bind_control("mouse0down",exec_type.repeat, ()=>{
+      this.audio.play("explosion",0.4);
+    },400);
+    this.bind_control("KeyD",exec_type.repeat,()=>{
+      if(this.state.velocity.x < 10){
+        this.state.velocity.x = this.state.velocity.x + 1;
+      }
+    });
+    this.bind_control("KeyD",exec_type.once,()=>{
+      this.state.direction = direction.right;
+      this.state.velocity.x = this.state.velocity.x + 0.1;
+    })
+    this.bind_control("Space",exec_type.once,()=>{
+      if(!this.state.jumping){
+        this.state.velocity.y += 25;
+        this.audio.play("slime",0.1);
+      }
+    });
   }
 }
 
@@ -299,7 +281,9 @@ export class StandingGoomba extends platformer_obj<goomba_state>{
         y:0
       },
       jumping:false,
-      health:100
+      health:100,
+      times_airshot:0,
+      max_times_airshot:0
     }
   }
   statef(time:number){

@@ -3,6 +3,7 @@ import {obj_state} from "../../lib/state";
 import { exec_type } from "../../lib/controls";
 import {rotation_length, obj} from "../../lib/object";
 import {getGame} from "../../van";
+import { Goomba } from "./goomba";
 
 interface bullet_state extends obj_state{
   rotation:number,
@@ -62,13 +63,21 @@ export class Rocket extends Bullet{
   width = 16;
   particle_timer = 0;
   particle_frequency = 5;
+  max_distance = 5000;
+  tags = ["Rocket"]
+  hitbox = {
+    x_offset:0,
+    y_offset:0,
+    width:16,
+    height:16
+  }
   constructor(x:[number,number],angle:number){
     super(x,angle);
     this.state.speed = 15;
     this.state.damage = 20;
   }
   register_audio(){
-    this.audio.add("explosion","./sounds/explosion.mp3");
+    this.audio.add("explosion","./sounds/explosion2.mp3");
   }
   statef(time:number){
     super.statef(time);
@@ -81,17 +90,18 @@ export class Rocket extends Bullet{
      this.particle_timer = 0; 
     }
     let room = getGame().state.current_room;
-    let collisions = room.check_collisions({
-      x:this.state.position.x,
-      y:this.state.position.y,
-      width:this.width,
-      height:this.height
-    },["player","gun"]);
+    let collisions = room.check_collisions(this.create_collision_box(),["gun","player"]);
     if(collisions.length > 0){
       for(let collision of collisions){
         let st = collision.state as unknown as plat_state;
         if((<platformer_obj<obj_state>>collision).enemy){
           st.health -= this.state.damage;
+        }
+        if(collision.tags.indexOf("dummy") > -1){
+          let dummy = collision as Goomba;
+          if(dummy.state.jumping){
+            dummy.state.times_airshot++;
+          }
         }
       }
       this.state.distance = this.max_distance;
@@ -99,19 +109,21 @@ export class Rocket extends Bullet{
       let explosion_collisions = room.check_collisions({
         x:this.state.position.x,
         y:this.state.position.y,
-        width:64,
-        height:64
+        width:256,
+        height:256
       },["static"])
       for(let collider of explosion_collisions){
         let distance = this.distance(collider);
-        let multiplyer = 1 - distance/32;
+        let multiplyer = 1 - distance/300;
+        if(multiplyer < 0)
+          multiplyer = 0;
         let o_state = collider.state as obj_state;
-        let velocities = rotation_length(multiplyer * 25, 180 + this.angleTowards(collider));
+        let velocities = rotation_length(multiplyer * 100, this.angleTowards(collider));
         o_state.velocity.x += velocities.x;
         o_state.velocity.y += velocities.y;
       }
       this.emit_particle("explosion",{x:0,y:0},500,0);
-      this.audio.play("explosion",0.5);
+      this.audio.play("explosion",0.2);
     }
   }
 }
