@@ -1,4 +1,4 @@
-import {GetScreenDimensions,GetViewportDimensions,getGame} from "../van";
+import {game, GetScreenDimensions,GetViewportDimensions} from "../van";
 import { collision_box } from "./collision";
 import {obj} from "./object";
 
@@ -25,29 +25,32 @@ interface keyBinds{
   [key:string]: Array<control_func>
 }
 let target = document.getElementById("target");
-target.addEventListener("click",(e)=>{
-  let mouse = Poll_Mouse();
-  let box:collision_box = {
-    x:mouse.x,
-    y:mouse.y,
-    height:1,
-    width:1
-  };
-  let d = [...all_binds];
-  for(let a = 0;a < d.length;a++){
-    let selected = d[a];
-    if(selected.type === btype.mouse && selected.key === "mouse1" && selected.execute == exec_type.once){
-      if(selected.obj !== undefined){
-        if(selected.obj.collides_with_box(box)){
-          selected.function();
+export function init_click_handler(game:game<unknown>){
+  target.addEventListener("click",(e)=>{
+    let mouse = Poll_Mouse(game);
+    let box:collision_box = {
+      x:mouse.x,
+      y:mouse.y,
+      height:1,
+      width:1
+    };
+    let d = [...all_binds];
+    for(let a = 0;a < d.length;a++){
+      let selected = d[a];
+      if(selected.type === btype.mouse && selected.key === "mouse1" && selected.execute == exec_type.once){
+        if(selected.obj !== undefined){
+          if(selected.obj.collides_with_box(box)){
+            selected.function();
+          }
+        }
+        else{
+          selected.function();        
         }
       }
-      else{
-        selected.function();        
-      }
-    }
-  }  
-})
+    }  
+  })
+}
+
 
 target.addEventListener("mousedown", (e) => {
   e.preventDefault();
@@ -177,12 +180,12 @@ let all_binds:Array<bind> = []
 
 let repeat_binds:Array<repeat_bind> = [];
 
-export function Poll_Mouse():mousePos{
+export function Poll_Mouse(a:game<unknown>):mousePos{
   let height = GetViewportDimensions().height;
-  let canvas = getGame().state.canvas;
+  let canvas = a.state.canvas;
   let wratio = parseFloat(window.getComputedStyle(canvas).width)/GetViewportDimensions().width;
   let vratio = parseFloat(window.getComputedStyle(canvas).height)/GetViewportDimensions().height;
-  let camera = getGame().state.cameras[0];
+  let camera = a.state.cameras[0];
   return ({
     x: (x/wratio/camera.state.scaling + camera.state.position.x - camera.state.dimensions.width/2) ,
     y: ((height - y/vratio)/camera.state.scaling + camera.state.position.y - camera.state.dimensions.height/2),

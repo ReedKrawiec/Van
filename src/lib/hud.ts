@@ -1,5 +1,4 @@
 import {obj} from "./object";
-import {getGame} from "../van";
 import { Goomba } from "../game/objects/goomba";
 
 interface HudTextGetFunc{

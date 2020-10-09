@@ -7,7 +7,7 @@ import {collision_box} from "../../lib/collision";
 import {Bind} from "../../lib/controls";
 
 import {Overworld} from "../rooms/overworld";
-import {getGame} from "../../van";
+import {g} from "../main";
 
 interface target_state extends obj_state{
   health:number;

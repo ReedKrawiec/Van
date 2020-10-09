@@ -2,8 +2,8 @@ import {platformer_obj, plat_state} from "./platformer_obj";
 import {obj_state} from "../../lib/state";
 import { exec_type } from "../../lib/controls";
 import {rotation_length, obj} from "../../lib/object";
-import {getGame} from "../../van";
 import { Goomba } from "./goomba";
+import {g} from "../main";
 
 interface bullet_state extends obj_state{
   rotation:number,
@@ -89,7 +89,7 @@ export class Rocket extends Bullet{
     if(this.particle_timer > this.particle_frequency){
      this.particle_timer = 0; 
     }
-    let room = getGame().state.current_room;
+    let room = g.state.current_room;
     let collisions = room.check_collisions(this.create_collision_box(),["gun","player"]);
     if(collisions.length > 0){
       for(let collision of collisions){

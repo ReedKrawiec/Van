@@ -7,7 +7,7 @@ import {collision_box} from "../../lib/collision";
 import {Bind} from "../../lib/controls";
 
 import {Overworld} from "../rooms/overworld";
-import {getGame} from "../../van";
+import {g} from "../main";
 
 enum direction{
   left,
@@ -69,7 +69,7 @@ export class Gun extends platformer_obj<gun_state>{
   }
   statef(t:number){
     if(!this.player){
-      let room = getGame().getRoom();
+      let room = g.getRoom();
       this.player = <Goomba>room.getObj("player");
       this.cursor = <Cursor>room.getObj("cursor");
     }
@@ -183,7 +183,8 @@ export class Goomba extends platformer_obj<goomba_state>{
     return super.renderf(t);
   }
   statef(time:number){
-    let room = getGame().getRoom();
+    console.log(time);
+    let room = g.getRoom();
     let cursor = room.getObj("cursor");
     
     if(room.check_collisions({
@@ -287,8 +288,9 @@ export class StandingGoomba extends platformer_obj<goomba_state>{
     }
   }
   statef(time:number){
+    
     if(this.state.jumping){
-      let mouse_position = Poll_Mouse();
+      let mouse_position = Poll_Mouse(this.game);
       if(mouse_position.y > mouse_position.last.y){
         if(this.collision_check({
           x:this.state.position.x,

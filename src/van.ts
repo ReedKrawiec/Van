@@ -8,8 +8,7 @@ import { collision_box } from "./lib/collision";
 import {sprite_renderer,rect_renderer, stroked_rect_renderer, text_renderer, Camera} from "./lib/render";
 import {HUD} from "./lib/hud";
 import {ExecuteRepeatBinds} from "./lib/controls";
-
-import {Overworld} from "./game/rooms/overworld";
+import {init_click_handler} from "./lib/controls";
 
 
 let canvas_element:HTMLCanvasElement = document.getElementById("target") as HTMLCanvasElement;
@@ -64,23 +63,21 @@ export let deep = (a:any) =>{
   return JSON.parse(JSON.stringify(a));
 }
 
-interface game_state{
+interface game_state<T>{
   logic:number,
   context:CanvasRenderingContext2D,
   current_room:room<unknown>,
   cameras:Array<Camera>,
   canvas:HTMLCanvasElement,
-  player_state:{
-    power:number
-  }
+  game:T
 }
 
-export class game{
-  state:game_state;
+export class game<T>{
+  state:game_state<T>;
   context:CanvasRenderingContext2D;
   offscreen_canvas:HTMLCanvasElement;
   offscreen_context:CanvasRenderingContext2D;
-  constructor(ctx:CanvasRenderingContext2D,a:room<unknown>){
+  constructor(ctx:CanvasRenderingContext2D,init_state:T){
     this.state = {
       canvas:canvas_element,
       logic:undefined,
@@ -105,13 +102,11 @@ export class game{
       })
       ],
       current_room: undefined,
-      player_state:{
-        power:0
-      }
+      game:init_state
     }
     this.offscreen_canvas = document.createElement("canvas");
     this.offscreen_context = this.offscreen_canvas.getContext("2d");
-    this.loadRoom(a);
+    this.initialize();
   }
   render(t:number){
     let time = t - last_render_time
@@ -227,14 +222,19 @@ export class game{
       boxes = [];
     requestAnimationFrame((a)=>{this.render(a)}); 
   }
+  initialize(){
+    init_click_handler(this);
+  }
   start_logic(a:number){
     return setInterval(()=>{
       let new_time = new Date();
       let time_since = new_time.getTime() - last_time.getTime();
       last_time = new_time;
-      this.state.current_room.statef(time_since);
-      if(this.state.current_room.hud){
-        this.state.current_room.hud.statef(time_since);
+      if(this.state.current_room){
+        this.state.current_room.statef(time_since);
+        if(this.state.current_room.hud){
+          this.state.current_room.hud.statef(time_since);
+        }
       }
         ExecuteRepeatBinds(a);
     },a);
@@ -244,6 +244,7 @@ export class game{
   }
   async loadRoom(x:room<unknown>){
     x.hud = x.registerHUD();
+    x.game = this;
     if(this.state.current_room !== undefined){
       while(this.state.current_room.objects.length > 0){
         this.state.current_room.objects[0].delete();
@@ -261,8 +262,8 @@ export class game{
   }
 }
 
-let game_inst = new game(context,new Overworld()  );
-
+//let game_inst = new game(context,new Overworld(),{});
+/*
 export function getGame(){
   return game_inst;
-}
+}*/

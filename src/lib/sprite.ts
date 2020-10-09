@@ -2,7 +2,6 @@ import { obj } from "./object";
 import { obj_state, position, dimensions} from "./state";
 import {getRandInt} from "./rand";
 import {particle_entry} from "./room";
-import {getGame} from "../van";
 
 export interface sprite{
   sprite_sheet:HTMLImageElement,
@@ -56,7 +55,7 @@ export class Particle extends obj<Particle_i>{
     this.random_range = random_range;
   }
   delete(){
-    let room = getGame().getRoom();
+    let room = this.game.getRoom();
     room.deleteItem(this.id,room.particles_arr);
   }
   statef(time:number){

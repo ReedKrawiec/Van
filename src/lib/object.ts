@@ -2,9 +2,9 @@ import { state_func, obj_state, position } from "./state";
 import { render_func } from "./render";
 import { Particle, positioned_sprite, sprite, sprite_gen } from "./sprite";
 import { collision_box } from "./collision";
-import { getGame } from "../van";
 import { Unbind, Bind, control_func, exec_type } from "./controls";
 import {audio} from "./audio";
+import {game} from "../van";
 
 interface obj_i<T> {
   statef: state_func<T>,
@@ -101,7 +101,7 @@ export class obj<T>{
   animations = new animations();
   audio = new audio();
   last_render:number = 0;
-  
+  game:game<unknown>;
   getState() {
     return this.state;
   }
@@ -165,16 +165,17 @@ export class obj<T>{
     for (let a of this.binds) {
       Unbind(a);
     }
-    getGame().getRoom().deleteItem(this.id);
+    this.game.getRoom().deleteItem(this.id);
   }
   collision_check(a: collision_box): Array<obj<unknown>> {
     if (this.collision) {
-      let room = getGame().getRoom();
+      let room = this.game.getRoom();
       return room.check_collisions(a, [this.id]);
     }
     return [];
   }
   statef(time: number) {
+
   }
   create_collision_box():collision_box{
     let st = this.state as unknown as obj_state;
@@ -236,7 +237,7 @@ export class obj<T>{
     return hcollides && vcollides;
   }
   emit_particle(name:string,offset:position,lifetime:number,range:number){
-    let room = getGame().getRoom();
+    let room = this.game.getRoom();
     let st = this.state as unknown as obj_state;
     let final_position:position = {
       x:st.position.x + offset.x,

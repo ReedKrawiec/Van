@@ -5,10 +5,10 @@ import { velocity_collision_check } from "../../lib/collision";
 import { gravity_obj, rotation_length } from "../../lib/object";
 import { Poll_Mouse, exec_type } from "../../lib/controls";
 import { HUD, Text } from "../../lib/hud";
-import { DEBUG, getGame, setDebug } from "../../van";
+import { DEBUG, setDebug } from "../../van";
 import {Bullet, Rocket} from "../objects/bullet";
 import {Target} from "../objects/target";
-
+import {g} from "../main";
 
 interface overworld_i {
   player: gravity_obj<unknown>,
@@ -30,7 +30,7 @@ class Overworld_HUD extends HUD {
       color: "white",
       align:"left"
     }, () => {
-      let x = getGame().getRoom().getObjByTag("dummy")[0] as Goomba;
+      let x = g.getRoom().getObjByTag("dummy")[0] as Goomba;
       return `Times Airshot:${x.state.times_airshot}`;
     }));
     this.text_elements.push(new Text({
@@ -43,7 +43,7 @@ class Overworld_HUD extends HUD {
       color: "white",
       align: "left"
     }, () => {
-      let x = getGame().getRoom().getObjByTag("dummy")[0] as Goomba;
+      let x = g.getRoom().getObjByTag("dummy")[0] as Goomba;
       return `Max Times Airshot:${Math.max(x.state.times_airshot,x.state.max_times_airshot)}`;
     }));
     
@@ -52,7 +52,7 @@ class Overworld_HUD extends HUD {
 
 export class Overworld extends room<overworld_i>{
   background_url = "./sprites/imD41l.jpg";
-  objects = [new ControlledPlayer(700, 150, "player"),new Goomba(550,150),new Box(600,0,"platform"),new Gun(),new Target([200,100]),new Target([200,200]),new Target([1000,100]),new Target([1000,200]),new Cursor("cursor")]
+  objects:gravity_obj<unknown>[]
   constructor() {
     super();
     this.state = {
@@ -64,6 +64,7 @@ export class Overworld extends room<overworld_i>{
       this.objects.push(new VertBox(320,250 + a * 500));
       this.objects.push(new VertBox(900,250 + a * 500));
     }
+    this.addItems([new ControlledPlayer(700, 150, "player"),new Goomba(550,150),new Box(600,0,"platform"),new Gun(),new Target([200,100]),new Target([200,200]),new Target([1000,100]),new Target([1000,200]),new Cursor("cursor")])
   }
   registerHUD() {
     return new Overworld_HUD();
@@ -91,7 +92,7 @@ export class Overworld extends room<overworld_i>{
         this.addItems(bullets);
       }
     },400)
-    let camera3 = getGame().state.cameras[1];
+    let camera3 = g.state.cameras[1];
     this.bindControl("ArrowLeft",exec_type.repeat, () => {
       camera3.state.position.x -= 10;
     },10)
@@ -130,7 +131,7 @@ export class Overworld extends room<overworld_i>{
       let player = this.getObj("player") as Goomba;
       let target = this.getObjByTag("dummy")[0] as Goomba;
       let cursor = this.getObj("cursor") as Cursor;
-      let cameras = getGame().state.cameras;
+      let cameras = g.state.cameras;
       if (player) {        
         cameras[0].x = player.state.position.x;
         cameras[0].y = player.state.position.y + (cameras[0].state.dimensions.height/2 - player.height/2 - 100);     
@@ -142,7 +143,7 @@ export class Overworld extends room<overworld_i>{
       if (cursor) {
         cursor.collision = false;
         cursor.gravity = false;
-        let mouse = Poll_Mouse();
+        let mouse = Poll_Mouse(this.game);
         cursor.state.position.x = mouse.x;
         cursor.state.position.y = mouse.y;
         cameras[2].state.position.x = mouse.x;

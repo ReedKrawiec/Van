@@ -4,9 +4,9 @@ import { obj_state } from "./state";
 import { velocity_collision_check,check_collisions,collision_box,check_all_collisions,check_all_objects} from "./collision";
 import {render_collision_box,DEBUG} from "../van";
 import {Bind,control_func, exec_type} from "./controls";
-import { Overworld } from "../game/rooms/overworld";
 import {HUD} from "./hud";
 import {audio} from "./audio"
+import {game} from "../van";
 
 interface position{
   x:number,
@@ -42,6 +42,7 @@ export class room<T>{
   particles:particles = {};
   particles_arr: Array<obj<unknown>> = [];
   state: T;
+  game:game<unknown>;
   hud:HUD;
   audio = new audio();
   load() {
@@ -63,10 +64,14 @@ export class room<T>{
   }
   async addItem(o:obj<obj_state>, list = this.objects){
     await o.load();
+    o.game = this.game;
     list.push(o);
   }
   async addItems(o:obj<obj_state>[], list = this.objects){
     await Promise.all(o.map((a)=>a.load()));
+    for(let ob of o){
+      ob.game = this.game;
+    }
     list.push(...o);
   }
   deleteItem(id:string, list = this.objects){
